@@ -8,16 +8,19 @@
   var LOCALHOST = "http://localhost:3000";
   var STAGING = "http://staging.outerspatial.com";
   var PRODUCTION = "http://www.outerspatial.com";
-  var BASE_ENDPOINT = PRODUCTION + '/api/v0/applications/1';
+  var BASE_ENDPOINT = PRODUCTION + '/api/v0/applications/3';
   var Configuration = {
-    MIN_ZOOM_LEVEL: 1,
-    MAX_ZOOM_LEVEL: 18,
+    MIN_ZOOM_LEVEL: 2,
+    MAX_ZOOM_LEVEL: 17,
     MAX_BOUNDS: [[41.838746, -82.276611],[40.456287,-81.035156]],
     DEFAULT_ZOOM_LEVEL: 10,
     // Ohio
     // DEFAULT_MAP_CENTER: [ 41.082020, -81.518506 ],
     // Boulder
-    DEFAULT_MAP_CENTER: [ 40.0293099,-105.2399774 ],
+    // DEFAULT_MAP_CENTER: [ 40.0293099,-105.2399774 ],
+
+    // SF
+    DEFAULT_MAP_CENTER: [37.7577,-122.4376],
     TRAIL_DATA_ENDPOINT: BASE_ENDPOINT + '/cached_trails',
     TRAILHEAD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trailheads",
     TRAILSEGMENT_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trail_segments",
