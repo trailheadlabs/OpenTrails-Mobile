@@ -578,7 +578,6 @@
         }
       });
 
-
       this.stewards = new Association({
         primary: this,
         foreign: Steward,
