@@ -1,4 +1,4 @@
-platforms/*
+platforms
 merges/*
 node_modules/*
 
