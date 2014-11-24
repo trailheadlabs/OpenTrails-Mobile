@@ -1405,15 +1405,15 @@
   });
 
   MapTrailHeadMarker.DeselectedIcon = new MapIcon({
-    iconUrl: 'img/trailhead-marker-deselected.png',
-    iconRetinaUrl: 'img/trailhead-marker-deselected@2x.png',
-    iconSize: [ 34, 34 ]
+    iconUrl: 'img/trailhead-icon-30.png',
+    iconRetinaUrl: 'img/trailhead-icon-30.png',
+    iconSize: [ 30, 30 ]
   });
 
   MapTrailHeadMarker.SelectedIcon = new MapIcon({
-    iconUrl: 'img/trailhead-marker-selected.png',
-    iconRetinaUrl: 'img/trailhead-marker-selected@2x.png',
-    iconSize: [ 48, 48 ],
+    iconUrl: 'img/trailhead-icon-hover-30.png',
+    iconRetinaUrl: 'img/trailhead-icon-hover-30.png',
+    iconSize: [ 30, 30 ],
     iconAnchor: [ 24, 24 ]
   });
 
