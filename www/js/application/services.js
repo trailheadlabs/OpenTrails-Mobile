@@ -28,7 +28,12 @@
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
     TERRAIN_MAP_TILE_ENDPOINT: "http://{s}.tiles.mapbox.com/v3/trailheadlabs.b9b3498e/{z}/{x}/{y}.png",
     SATELLITE_MAP_TILE_ENDPOINT: "https://{s}.tiles.mapbox.com/v3/trailheadlabs.jih1cig0/{z}/{x}/{y}.png",
-
+    TRAIL_PATH_STYLE: {
+        color: "#f0f",
+        weight: 5,
+        lineJoin: "round",
+        lineCap: "round"
+      },
     LEAFLET_ATTRIBUTION: '<a href="#" onclick="window.open(\'http://leafletjs.com\',\'_system\')">Leaflet</a>',
     OSM_ATTRIBUTION: '&copy; <a href="#" onclick="window.open(\'http://osm.org/copyright\',\'_system\')">OpenStreetMap</a> contributors'
   };
@@ -1046,6 +1051,8 @@
 
     DEFAULT_CENTER: Configuration.DEFAULT_MAP_CENTER,
 
+    DEFAULT_TRAIL_STYLE: Configuration.TRAIL_PATH_STYLE,
+
     defaults: {
       el: 'map-container',
       options: {
@@ -1419,9 +1426,9 @@
   //
 
   var MapTrailLayer = MapGeoJsonLayer.inherit({
-
-    selected: false,
-
+    selected: [],
+    selectedBounds: null,
+    segmentLayers: [],
     defaults: {
       geojson: null,
       options: {
@@ -1433,36 +1440,52 @@
           color: "#e2504a",
           opacity: 1
         },
-        smoothFactor: 2
-      },
-      record: null
+        smoothFactor: 2,
+        
+      }
+    },   
+    initialize: function () {
+      this.get('options').onEachFeature = this.onEachFeature.bind(this);
+      this.delegate = L.geoJson(this.get('geojson'), this.get('options'));
     },
 
-    select: function () {
-      this.selected = true;
+    select: function (ids) {
+      
+        
 
-      this.delegate.setStyle(this.get('options').highlightStyle);
+        for (var i = 0; i < ids.length; i++) {
+              var id = ids[i];
+              this.selectedBounds.extend(this.segmentLayers[id].getBounds());
+              this.segmentLayers[id].setStyle(this.get('options').highlightStyle);
+              this.segmentLayers[id].bringToFront();
+              this.selected.push(id);
 
-      this.bringToFront();
-
+            }
       return this;
     },
 
     deselect: function () {
-      this.selected = false;
-
-      this.delegate.setStyle(this.get('options').style);
-
-      this.bringToBack();
-
+      for (var i = 0; i < this.selected.length; i++) {
+           var id = this.selected[i];
+        this.segmentLayers[id].setStyle(this.get('options').style);
+      this.segmentLayers[id].bringToBack();   
+        } 
+        this.selected = [];
+        this.selectedBounds = new L.LatLngBounds();
+      
       return this;
+    },
+
+    onEachFeature : function(feature, layer) {
+                            var id = feature.properties.outerspatial.id;
+                            this.segmentLayers[id] = layer;
+                        },
+    getSelectedBounds : function() {
+      return this.selectedBounds;
     }
+   
 
-  });
-
-  MapTrailLayer.fromTrail = function (trail) {
-    return new MapTrailLayer({ geojson: trail.toGeoJson(), record: trail });
-  };
+  }); 
 
 
   //
@@ -1552,7 +1575,7 @@
     function ($http) {
 
       var LOADABLE = [
-        "TrailHead", "Trail", "TrailSegment", "Steward","Notification"
+        "TrailHead", "Trail", "Steward","Notification"
       ];
 
       var Models = {
@@ -1617,6 +1640,10 @@
         return objArray;
       }
 
+      TrailSegment.loadGeoJSON = function (success) {
+        $http.get(Configuration.TRAILSEGMENT_DATA_ENDPOINT).success(success);
+      }
+
       function loadModel (model, key, url, page) {
         // var data = window.localStorage.getItem(key);
         var data = false;
@@ -1653,7 +1680,7 @@
 
       loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
       loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
-      loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
+    //  loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
       loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
       loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
       loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);

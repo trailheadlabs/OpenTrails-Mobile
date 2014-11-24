@@ -109,9 +109,8 @@
     'MapTrailHeadMarker',
     'MapMarkerClusterGroup',
     'TrailSearch',
-    'TrailsCanvasLayer',
 
-    function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, TrailsCanvasLayer) {
+    function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, TrailsCanvasLayersz) {
 
       //
       // "CONSTANTS"
@@ -120,8 +119,6 @@
       // Name of the views.
       var MAP_VIEW = 'map';
       var TRAILS_VIEW = 'trails';
-
-      var USE_CANVAS_TRAILS = true;
 
       // Default search message when no filters are selected.
       var DEFAULT_SEARCH_MESSAGE = "All Activities";
@@ -334,7 +331,7 @@
 
       var trailHeadCluster = new MapMarkerClusterGroup();
       var trailHeadMarkers = [];
-      var trailLayers  = [];
+      var trailsLayer;
 
       $scope.selectedTrailHead = null;
       $scope.selectedSteward = null;
@@ -342,7 +339,6 @@
       $scope.selectedPhoto = null;
       $scope.selectedTrails = [];
 
-      var trailsLayer;
       $scope.appLoaded = false;
       function onLoad (loaded) {
         if (loaded) {
@@ -353,15 +349,15 @@
           Models.TrailHead.query.each(_initializeTrailHeadMarker);
           trailHeadCluster.addTo(Map);
 
-          if (USE_CANVAS_TRAILS) {
-            trailsLayer = (new TrailsCanvasLayer({
-              trails: Models.Trail.query.all()
-            })).addTo(Map.delegate);
-          }
-          else {
-            Models.Trail.query.each(_renderTrailLayer);
-          }
-
+          // if (USE_CANVAS_TRAILS) {
+          //   trailsLayer = (new TrailsCanvasLayer({
+          //     trails: Models.Trail.query.all()
+          //   })).addTo(Map.delegate);
+          // }
+          // else {
+          //   Models.Trail.query.each(_renderTrailLayer);
+          // }
+          Models.TrailSegment.loadGeoJSON(onTrailSegmentData);
 
           // Populate search results view with all results.
           clearSearch();
@@ -377,6 +373,12 @@
           // ^^ commented out in merge conflict resolution. - AJW
           unwatchLoaded();
         }
+      }
+
+      function onTrailSegmentData(data) {
+          $scope.trailsLayer = new MapTrailLayer({
+          geojson: data
+        }).addTo(Map);
       }
 
       function _searchFormSubmitted(evt) {
@@ -545,26 +547,19 @@
 
       });
 
-      $scope.$watch('selectedTrail', function (value) {
+      $scope.$watch('selectedTrail', function (trail) {
         var fitOptions = {
           paddingBottomRight: [0, 250]
         };
-
-        if (trailsLayer) {
-          trailsLayer.highlight(value);
-          if (trailsLayer.highlighted) {
-            Map.fitBounds(trailsLayer.highlighted.bounds, fitOptions);
-          }
-        }
-
-        ng.forEach(trailLayers, function (layer) {
-          if (layer.get('record') === value)  {
-            selectTrailLayer(layer);
-            Map.fitBounds( layer.getBounds(), fitOptions );
-          } else {
-            deselectTrailLayer(layer);
-          }
-        });
+        if ($scope.trailsLayer){
+        $scope.trailsLayer.deselect();
+        if (trail) {
+          var segment_ids = trail.get('segment_ids');
+          $scope.trailsLayer.select(segment_ids);
+          Map.fitBounds( $scope.trailsLayer.getSelectedBounds(), fitOptions );
+               }
+               }
+                
       });
 
       $scope.nextTrail = function () {
