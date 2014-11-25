@@ -191,9 +191,10 @@
 
       function onGeoPositionSuccess (position) {
         positionMarker.setPosition([position.coords.latitude,position.coords.longitude]);
-        GeoPosition.set(position.coords);
+        GeoPosition.set({latitude: position.coords.latitude,longitude: position.coords.longitude});
         console.log('Geolocated user!');
         Map.setView( positionMarker.getPosition(), Map.DEFAULT_ZOOM );
+        clearSearch();
       }
 
       function onGeoPositionError (err) {
@@ -209,12 +210,18 @@
 
 
       function recenter () {
-
+        // this is temporary. we reset the zoom to closer since we launched the map zoomed out for demo 
+        Map.DEFAULT_ZOOM = 9;
         document.addEventListener("deviceready", function(){
           console.log('Device Ready!');
           navigator.geolocation.getCurrentPosition(
             onGeoPositionSuccess,
-            onGeoPositionError
+            onGeoPositionError,
+            {
+              enableHighAccuracy: false,
+              timeout: 30000,
+              maximumAge: 0
+            }
           );
 
 
@@ -408,7 +415,20 @@
 
       function openTrailHeadInNativeMaps (trailhead) {
         var position = $scope.selectedTrailHead.getLatLng();
-        window.open('maps:q='+position.join(','), '_system');
+
+        appAvailability.check(
+            'comgooglemaps://', // URI Scheme
+            function() {  // Success callback
+              var urlPrefix = 'comgooglemaps://';
+              window.open(urlPrefix+'?daddr='+position.join(','), '_system');
+
+            },
+            function() {  // Error callback
+              var urlPrefix = 'https://maps.google.com';
+              window.open(urlPrefix+'?daddr='+position.join(','), '_system');
+
+            }
+        );
       }
 
       $scope.openTrailHeadInNativeMaps = openTrailHeadInNativeMaps;

@@ -13,7 +13,9 @@
     MIN_ZOOM_LEVEL: 1,
     MAX_ZOOM_LEVEL: 18,
     MAX_BOUNDS: [[41.838746, -82.276611],[40.456287,-81.035156]],
-    DEFAULT_ZOOM_LEVEL: 9,
+    DEFAULT_ZOOM_LEVEL: 3,
+    // Center of the United States
+    DEFAULT_MAP_CENTER: [ 39.8282, -98.5795 ],
     // Ohio
     // DEFAULT_MAP_CENTER: [ 41.082020, -81.518506 ],
     // Boulder
@@ -21,11 +23,14 @@
     TRAIL_DATA_ENDPOINT: BASE_ENDPOINT + '/cached_trails',
     TRAILHEAD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trailheads",
     TRAILSEGMENT_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trail_segments",
-    STEWARD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_stewards",
+    STEWARD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_stewards_csv",
     NOTIFICATION_DATA_ENDPOINT: BASE_ENDPOINT + "/notifications?per_page=200",
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
     TERRAIN_MAP_TILE_ENDPOINT: "http://{s}.tiles.mapbox.com/v3/trailheadlabs.b9b3498e/{z}/{x}/{y}.png",
-    SATELLITE_MAP_TILE_ENDPOINT: "https://{s}.tiles.mapbox.com/v3/trailheadlabs.jih1cig0/{z}/{x}/{y}.png"
+    SATELLITE_MAP_TILE_ENDPOINT: "https://{s}.tiles.mapbox.com/v3/trailheadlabs.jih1cig0/{z}/{x}/{y}.png",
+
+    LEAFLET_ATTRIBUTION: '<a href="#" onclick="window.open(\'http://leafletjs.com\',\'_system\')">Leaflet</a>',
+    OSM_ATTRIBUTION: '&copy; <a href="#" onclick="window.open(\'http://osm.org/copyright\',\'_system\')">OpenStreetMap</a> contributors'
   };
 
   //
@@ -291,7 +296,7 @@
 
     if (params.position) {
       results = results.sort(function (a,b) {
-        return a.distanceFrom(params.position) < b.distanceFrom(params.position);
+        return a.distanceFrom(params.position) - b.distanceFrom(params.position);
       });
     }
 
@@ -520,9 +525,11 @@
 
       if (data) {
         ng.forEach(data, function (trail) {
-          if(trail.outerspatial){
-            trail.id = trail.outerspatial.id;
-            trail.segment_ids = trail.outerspatial.segment_ids;
+          if(trail.outerspatial_id){
+            trail.id = trail.outerspatial_id;
+            trail.segment_ids = trail.outerspatial_segment_ids.split(';');
+          } else {
+            trail.segment_ids = trail.segment_ids.split(';')
           }
           if (trail.segment_ids.length) {
             results.push( new Trail(trail) );
@@ -890,8 +897,8 @@
 
       if (data.length) {
         ng.forEach(data, function (steward) {
-          if(steward.outerspatial){
-            steward.id = steward.outerspatial.id;
+          if(steward.outerspatial_id){
+            steward.id = steward.outerspatial_id;
           }
           results.push( new Steward(steward) );
         });
@@ -1052,6 +1059,7 @@
 
     initialize: function () {
       this.delegate = L.map( this.get('el'), this.get('options') );
+      this.delegate.attributionControl.setPrefix(Configuration.LEAFLET_ATTRIBUTION);
     },
 
     setView: function (position, zoom) {
@@ -1185,7 +1193,7 @@
       url: TILE_LAYERS.terrain.url,
       options: {
         "detectRetina": true,
-        "attribution": '&copy; <a href="http://osm.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+        "attribution": Configuration.OSM_ATTRIBUTION
       }
     },
 
@@ -1571,45 +1579,6 @@
         return loaded;
       };
 
-      function parseCSV(strData, strDelimiter) {
-        strDelimiter = (strDelimiter || ",");
-        var objPattern = new RegExp((
-          "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-          "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-          "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi"
-        );
-        var arrData = [[]];
-        var arrMatches = null;
-
-        while (arrMatches = objPattern.exec(strData)) {
-            var strMatchedDelimiter = arrMatches[1];
-            if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
-              arrData.push([]);
-            }
-            if (arrMatches[2]) {
-              var strMatchedValue = arrMatches[2].replace(
-              new RegExp("\"\"", "g"), "\"");
-            } else {
-              var strMatchedValue = arrMatches[3];
-            }
-            arrData[arrData.length - 1].push(strMatchedValue);
-        }
-
-        var objArray = [];
-        for (var i = 1; i < arrData.length; i++) {
-          objArray[i - 1] = {};
-          for (var k = 0; k < arrData[0].length && k < arrData[i].length; k++) {
-            var key = arrData[0][k];
-            if (key == "segment_ids") {
-              arrData[i][k] = arrData[i][k].split(";");
-            }
-            objArray[i - 1][key] = arrData[i][k]
-          }
-        }
-
-        return objArray;
-      }
-
       function loadModel (model, key, url, page) {
         // var data = window.localStorage.getItem(key);
         var data = false;
@@ -1623,9 +1592,9 @@
           $http.get(pageUrl).then(
             function (res) {
               data = res.data;
-              // if (key == "TrailData" || key == "StewardData") {
-              //   data = parseCSV(data);
-              // }
+              if (key == "TrailData" || key == "StewardData") {
+                data = parseCSV(data);
+              }
               // window.localStorage.setItem(key, JSON.stringify(data) );
               if(data.paging) {
 
@@ -1642,6 +1611,10 @@
             }
           );
         }
+      }
+
+      function parseCSV(data){
+        return Papa.parse(data,{header:true}).data;
       }
 
       loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
