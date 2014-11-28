@@ -1299,8 +1299,8 @@
         }
 
         return new L.DivIcon({
-            html: '<div><span>' + childCount + '</span></div>',
-            className: 'marker-cluster' + c,
+            html: '<div><span></div>',
+            className: 'trailhead-icon-multi',
             iconSize: new L.Point(40, 40)
           });
       }
@@ -1405,15 +1405,15 @@
   });
 
   MapTrailHeadMarker.DeselectedIcon = new MapIcon({
-    iconUrl: 'img/trailhead-icon-30.png',
-    iconRetinaUrl: 'img/trailhead-icon-30.png',
-    iconSize: [ 30, 30 ]
+    iconUrl: 'img/trailhead-marker-deselected.png',
+    iconRetinaUrl: 'img/trailhead-marker-deselected@2x.png',
+    iconSize: [ 34, 34 ]
   });
 
   MapTrailHeadMarker.SelectedIcon = new MapIcon({
-    iconUrl: 'img/trailhead-icon-hover-30.png',
-    iconRetinaUrl: 'img/trailhead-icon-hover-30.png',
-    iconSize: [ 30, 30 ],
+    iconUrl: 'img/trailhead-marker-selected.png',
+    iconRetinaUrl: 'img/trailhead-marker-selected@2x.png',
+    iconSize: [ 48, 48 ],
     iconAnchor: [ 24, 24 ]
   });
 
