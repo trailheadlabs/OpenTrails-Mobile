@@ -10,7 +10,6 @@
 
   var onDeviceReady = function () {
     ng.bootstrap(document, ['trails']);
-    navigator.splashscreen.hide();
   };
 
   document.addEventListener('deviceready', onDeviceReady, false);

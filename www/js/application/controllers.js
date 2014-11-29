@@ -19,6 +19,8 @@
       // loaded to instantiate variables
       var unwatchLoaded = $scope.$watch(Models.loaded, function (value) {
         if(Models.loaded()) {
+
+          navigator.splashscreen.hide(); 
           $scope.stewards = Models.Steward.query.all();
           $scope.steward  = $scope.stewards[index];
           unwatchLoaded();
