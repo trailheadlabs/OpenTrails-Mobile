@@ -10,6 +10,7 @@
 
   var onDeviceReady = function () {
     ng.bootstrap(document, ['trails']);
+    navigator.splashscreen.hide();
   };
 
   document.addEventListener('deviceready', onDeviceReady, false);
@@ -17,7 +18,7 @@
   window.addEventListener('load', function() {
     fc.attach(document.body);
   }, false);
-  
+
   //  This is very evil. But unfortunately it must be until Phonegap Build fully supports 
   //  the status bar plugin.
   var iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
