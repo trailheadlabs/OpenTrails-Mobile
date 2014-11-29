@@ -192,11 +192,15 @@
         console.log('Geolocated user!');
         Map.setView( positionMarker.getPosition(), Map.DEFAULT_ZOOM );
         clearSearch();
+        $scope.locationPending = false;
+        $scope.$digest();
       }
 
       function onGeoPositionError (err) {
         console.log('Error: Could not geolocate user');
         Map.setView(Map.DEFAULT_CENTER, Map.DEFAULT_ZOOM);
+        $scope.locationPending = false;
+        $scope.$digest();
         // positionMarker.setPosition([position.coords.latitude,position.coords.longitude]);
         // GeoPosition.set({latitude: Map.getCenter().lat,longitude: Map.getCenter().lng});
       }
@@ -215,14 +219,15 @@
             onGeoPositionSuccess,
             onGeoPositionError,
             {
-              enableHighAccuracy: false,
-              timeout: 30000,
+              enableHighAccuracy: true,
+              timeout: 10000,
               maximumAge: 0
             }
           );
 
 
         }, false);
+        $scope.locationPending = true;
 
 
       }
@@ -558,7 +563,7 @@
           $scope.trailsLayer.select(segment_ids);
           Map.fitBounds( $scope.trailsLayer.getSelectedBounds(), fitOptions );
                }
-               }
+               }  
                 
       });
 

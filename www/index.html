@@ -35,7 +35,7 @@
 
         <div id="map-recenter">
           <a href="#" class="control" ng-click="recenter();">
-            <i class="fa fa-location-arrow"></i>
+            <i ng-class="locationPending ? 'fa fa-spinner fa-spin' : 'fa fa-location-arrow'"></i>
           </a>
         </div>
 
