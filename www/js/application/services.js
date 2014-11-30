@@ -29,12 +29,7 @@
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
     TERRAIN_MAP_TILE_ENDPOINT: "http://{s}.tiles.mapbox.com/v3/trailheadlabs.b9b3498e/{z}/{x}/{y}.png",
     SATELLITE_MAP_TILE_ENDPOINT: "https://{s}.tiles.mapbox.com/v3/trailheadlabs.jih1cig0/{z}/{x}/{y}.png",
-    TRAIL_PATH_STYLE: {
-        color: "#f0f",
-        weight: 5,
-        lineJoin: "round",
-        lineCap: "round"
-      },
+ 
     LEAFLET_ATTRIBUTION: '<a href="#" onclick="window.open(\'http://leafletjs.com\',\'_system\')">Leaflet</a>',
     OSM_ATTRIBUTION: '&copy; <a href="#" onclick="window.open(\'http://osm.org/copyright\',\'_system\')">OpenStreetMap</a> contributors'
   };
@@ -794,7 +789,6 @@
       feature.properties.geometry = feature.geometry;
       results.push( new TrailSegment(feature.properties) );
       this.query.setCollection(results);
-   
     }
 
   });
@@ -1040,8 +1034,6 @@
     DEFAULT_ZOOM: Configuration.DEFAULT_ZOOM_LEVEL,
 
     DEFAULT_CENTER: Configuration.DEFAULT_MAP_CENTER,
-
-    DEFAULT_TRAIL_STYLE: Configuration.TRAIL_PATH_STYLE,
 
     defaults: {
       el: 'map-container',
@@ -1438,50 +1430,45 @@
         smoothFactor: 2,
         
       }
-    },   
+    },
+
     initialize: function () {
       this.get('options').onEachFeature = this.onEachFeature.bind(this);
       this.delegate = L.geoJson(this.get('geojson'), this.get('options'));
     },
 
     select: function (ids) {
-      
-        
-
-        for (var i = 0; i < ids.length; i++) {
-              var id = ids[i];
-              this.selectedBounds.extend(this.segmentLayers[id].getBounds());
-              this.segmentLayers[id].setStyle(this.get('options').highlightStyle);
-              this.segmentLayers[id].bringToFront();
-              this.selected.push(id);
-
-            }
+      for (var i = 0; i < ids.length; i++) {
+        var id = ids[i];
+        this.selectedBounds.extend(this.segmentLayers[id].getBounds());
+        this.segmentLayers[id].setStyle(this.get('options').highlightStyle);
+        this.segmentLayers[id].bringToFront();
+        this.selected.push(id);
+      }
       return this;
     },
 
     deselect: function () {
       for (var i = 0; i < this.selected.length; i++) {
-           var id = this.selected[i];
+        var id = this.selected[i];
         this.segmentLayers[id].setStyle(this.get('options').style);
-      this.segmentLayers[id].bringToBack();   
-        } 
-        this.selected = [];
-        this.selectedBounds = new L.LatLngBounds();
-      
+        this.segmentLayers[id].bringToBack();
+      }
+      this.selected = [];
+      this.selectedBounds = new L.LatLngBounds();
       return this;
     },
 
     onEachFeature : function(feature, layer) {
-                            var id = feature.properties.outerspatial.id;
-                            this.segmentLayers[id] = layer;
-                            TrailSegment.load(feature);
-                        },
+      var id = feature.properties.outerspatial.id;
+      this.segmentLayers[id] = layer;
+      TrailSegment.load(feature);
+    },
+
     getSelectedBounds : function() {
       return this.selectedBounds;
     }
-   
-
-  }); 
+  });
 
 
   //
@@ -1597,48 +1584,48 @@
         return loaded;
       };
 
-      function parseCSV(strData, strDelimiter) {
-        strDelimiter = (strDelimiter || ",");
-        var objPattern = new RegExp((
-          "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-          "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-          "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi"
-        );
-        var arrData = [[]];
-        var arrMatches = null;
+      // function parseCSV(strData, strDelimiter) {
+      //   strDelimiter = (strDelimiter || ",");
+      //   var objPattern = new RegExp((
+      //     "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+      //     "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+      //     "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi"
+      //   );
+      //   var arrData = [[]];
+      //   var arrMatches = null;
 
-        while (arrMatches = objPattern.exec(strData)) {
-            var strMatchedDelimiter = arrMatches[1];
-            if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
-              arrData.push([]);
-            }
-            if (arrMatches[2]) {
-              var strMatchedValue = arrMatches[2].replace(
-              new RegExp("\"\"", "g"), "\"");
-            } else {
-              var strMatchedValue = arrMatches[3];
-            }
-            arrData[arrData.length - 1].push(strMatchedValue);
-        }
+      //   while (arrMatches = objPattern.exec(strData)) {
+      //       var strMatchedDelimiter = arrMatches[1];
+      //       if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
+      //         arrData.push([]);
+      //       }
+      //       if (arrMatches[2]) {
+      //         var strMatchedValue = arrMatches[2].replace(
+      //         new RegExp("\"\"", "g"), "\"");
+      //       } else {
+      //         var strMatchedValue = arrMatches[3];
+      //       }
+      //       arrData[arrData.length - 1].push(strMatchedValue);
+      //   }
 
-        var objArray = [];
-        for (var i = 1; i < arrData.length; i++) {
-          objArray[i - 1] = {};
-          for (var k = 0; k < arrData[0].length && k < arrData[i].length; k++) {
-            var key = arrData[0][k];
-            if (key == "segment_ids") {
-              arrData[i][k] = arrData[i][k].split(";");
-            }
-            objArray[i - 1][key] = arrData[i][k]
-          }
-        }
+      //   var objArray = [];
+      //   for (var i = 1; i < arrData.length; i++) {
+      //     objArray[i - 1] = {};
+      //     for (var k = 0; k < arrData[0].length && k < arrData[i].length; k++) {
+      //       var key = arrData[0][k];
+      //       if (key == "segment_ids") {
+      //         arrData[i][k] = arrData[i][k].split(";");
+      //       }
+      //       objArray[i - 1][key] = arrData[i][k]
+      //     }
+      //   }
 
-        return objArray;
-      }
+      //   return objArray;
+      // }
 
       TrailSegment.loadGeoJSON = function (success) {
         $http.get(Configuration.TRAILSEGMENT_DATA_ENDPOINT).success(success);
-      }
+      };
 
       function loadModel (model, key, url, page) {
         // var data = window.localStorage.getItem(key);
@@ -1676,7 +1663,8 @@
 
       loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
       loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
-    //  loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
+      //  don't load segment models here since they are loaded as the geoJSON is applied
+      //  loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
       loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
       loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
       loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);
