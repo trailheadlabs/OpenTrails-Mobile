@@ -252,6 +252,7 @@
         mapContainerElm.classList.remove(lastZoomClass);
         mapContainerElm.classList.add(zoomClass);
         lastZoomClass = zoomClass;
+        lastSelectedMarker && lastSelectedMarker.bringToFront();
       }
 
       //

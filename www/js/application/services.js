@@ -16,6 +16,7 @@
     DEFAULT_ZOOM_LEVEL: 3,
     // Center of the United States
     DEFAULT_MAP_CENTER: [ 39.8282, -98.5795 ],
+    SELECTED_TRAILHEAD_ZINDEX_OFFSET: 9000,
     // Ohio
     // DEFAULT_MAP_CENTER: [ 41.082020, -81.518506 ],
     // Boulder
@@ -783,28 +784,17 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (feature) {
       var results = this.query.collection || [];
-
-      if (data.features) {
-
-        ng.forEach(data.features, function (feature) {
-          if(feature.properties.outerspatial){
-            feature.properties.id = feature.properties.outerspatial.id;
-            feature.properties.steward_id = feature.properties.outerspatial.steward_id;
-          }
-
-          feature.properties.geometry = feature.geometry;
-          results.push( new TrailSegment(feature.properties) );
-
-        });
+      if(feature.properties.outerspatial){
+        feature.properties.id = feature.properties.outerspatial.id;
+        feature.properties.steward_id = feature.properties.outerspatial.steward_id;
       }
 
+      feature.properties.geometry = feature.geometry;
+      results.push( new TrailSegment(feature.properties) );
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+   
     }
 
   });
@@ -1393,7 +1383,12 @@
     select: function () {
       this.selected = true;
       this.setIcon(MapTrailHeadMarker.SelectedIcon);
+      this.delegate.setZIndexOffset(Configuration.SELECTED_TRAILHEAD_ZINDEX_OFFSET);
       return this;
+    },
+
+    bringToFront: function () {
+      this.delegate.setZIndexOffset(Configuration.SELECTED_TRAILHEAD_ZINDEX_OFFSET);
     },
 
     deselect: function () {
@@ -1479,6 +1474,7 @@
     onEachFeature : function(feature, layer) {
                             var id = feature.properties.outerspatial.id;
                             this.segmentLayers[id] = layer;
+                            TrailSegment.load(feature);
                         },
     getSelectedBounds : function() {
       return this.selectedBounds;
