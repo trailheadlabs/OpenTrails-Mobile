@@ -29,7 +29,7 @@
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
     TERRAIN_MAP_TILE_ENDPOINT: "http://{s}.tiles.mapbox.com/v3/trailheadlabs.b9b3498e/{z}/{x}/{y}.png",
     SATELLITE_MAP_TILE_ENDPOINT: "https://{s}.tiles.mapbox.com/v3/trailheadlabs.jih1cig0/{z}/{x}/{y}.png",
- 
+
     LEAFLET_ATTRIBUTION: '<a href="#" onclick="window.open(\'http://leafletjs.com\',\'_system\')">Leaflet</a>',
     OSM_ATTRIBUTION: '&copy; <a href="#" onclick="window.open(\'http://osm.org/copyright\',\'_system\')">OpenStreetMap</a> contributors'
   };
@@ -1430,7 +1430,7 @@
           opacity: 1
         },
         smoothFactor: 2,
-        
+
       }
     },
 
@@ -1585,45 +1585,6 @@
 
         return loaded;
       };
-
-      // function parseCSV(strData, strDelimiter) {
-      //   strDelimiter = (strDelimiter || ",");
-      //   var objPattern = new RegExp((
-      //     "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-      //     "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-      //     "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi"
-      //   );
-      //   var arrData = [[]];
-      //   var arrMatches = null;
-
-      //   while (arrMatches = objPattern.exec(strData)) {
-      //       var strMatchedDelimiter = arrMatches[1];
-      //       if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
-      //         arrData.push([]);
-      //       }
-      //       if (arrMatches[2]) {
-      //         var strMatchedValue = arrMatches[2].replace(
-      //         new RegExp("\"\"", "g"), "\"");
-      //       } else {
-      //         var strMatchedValue = arrMatches[3];
-      //       }
-      //       arrData[arrData.length - 1].push(strMatchedValue);
-      //   }
-
-      //   var objArray = [];
-      //   for (var i = 1; i < arrData.length; i++) {
-      //     objArray[i - 1] = {};
-      //     for (var k = 0; k < arrData[0].length && k < arrData[i].length; k++) {
-      //       var key = arrData[0][k];
-      //       if (key == "segment_ids") {
-      //         arrData[i][k] = arrData[i][k].split(";");
-      //       }
-      //       objArray[i - 1][key] = arrData[i][k]
-      //     }
-      //   }
-
-      //   return objArray;
-      // }
 
       TrailSegment.loadGeoJSON = function (success) {
         $http.get(Configuration.TRAILSEGMENT_DATA_ENDPOINT).success(success);

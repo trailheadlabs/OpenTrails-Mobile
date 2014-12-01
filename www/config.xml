@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.trailheadlabs.opentrails" version="1.2.0" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
+<widget id="com.trailheadlabs.opentrails" version="1.3.0" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
 
   <preference name="phonegap-version" value="3.6.3" />
   <preference name="orientation" value="portrait" />
@@ -52,7 +52,7 @@
   <preference name="DisallowOverscroll" value="true" />
   <preference name="AutoHideSplashScreen" value="false" />
   <preference name="SplashScreenDelay" value="10000" />
-  
+
   <gap:platforms>
     <gap:platform name="ios" minVersion="3.2" />
   </gap:platforms>
