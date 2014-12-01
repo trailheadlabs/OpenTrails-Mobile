@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <style> <!-- inline style to prevent render flicker -->
-      [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
-         display: none !important;
-        }
-    </style>    
+  <head> 
     <meta name="format-detection" content="telephone=yes">
     <meta charset="utf-8" />
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
@@ -17,7 +12,17 @@
     <link rel="stylesheet" type="text/css" href="css/application.css"/>
     <!-- <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet"> -->
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="css/overrides.css"/>
+
     <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro|Lora:400,700|Merriweather+Sans:400,300,700,800' rel='stylesheet' type='text/css'>
+        <style> <!-- inline style to prevent render flicker -->
+      [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+         display: none !important;
+        }
+        #status {
+            background-color:red;
+        }
+    </style>   
   </head>
 
   <body ng-controller='AppCtrl' class='ng-cloak' ng-cloak>
