@@ -50,7 +50,9 @@
   </author>
 
   <preference name="DisallowOverscroll" value="true" />
-
+  <preference name="AutoHideSplashScreen" value="false" />
+  <preference name="SplashScreenDelay" value="10000" />
+  
   <gap:platforms>
     <gap:platform name="ios" minVersion="3.2" />
   </gap:platforms>
