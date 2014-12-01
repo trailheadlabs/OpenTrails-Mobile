@@ -1586,6 +1586,8 @@
         return loaded;
       };
 
+<<<<<<< HEAD
+=======
       // function parseCSV(strData, strDelimiter) {
       //   strDelimiter = (strDelimiter || ",");
       //   var objPattern = new RegExp((
@@ -1629,6 +1631,7 @@
         $http.get(Configuration.TRAILSEGMENT_DATA_ENDPOINT).success(success);
       };
 
+>>>>>>> 1a1ca6fcec215c2300d7e84ce21046a811c75166
       function loadModel (model, key, url, page) {
         // var data = window.localStorage.getItem(key);
         var data = false;
