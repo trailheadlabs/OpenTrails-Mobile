@@ -19,8 +19,7 @@
       // loaded to instantiate variables
       var unwatchLoaded = $scope.$watch(Models.loaded, function (value) {
         if(Models.loaded()) {
-
-          navigator.splashscreen.hide(); 
+          navigator.splashscreen.hide();
           $scope.stewards = Models.Steward.query.all();
           $scope.steward  = $scope.stewards[index];
           unwatchLoaded();
@@ -252,6 +251,7 @@
         mapContainerElm.classList.remove(lastZoomClass);
         mapContainerElm.classList.add(zoomClass);
         lastZoomClass = zoomClass;
+        // keep the selected marker on top after zooming.
         lastSelectedMarker && lastSelectedMarker.bringToFront();
       }
 
@@ -357,14 +357,6 @@
           Models.TrailHead.query.each(_initializeTrailHeadMarker);
           trailHeadCluster.addTo(Map);
 
-          // if (USE_CANVAS_TRAILS) {
-          //   trailsLayer = (new TrailsCanvasLayer({
-          //     trails: Models.Trail.query.all()
-          //   })).addTo(Map.delegate);
-          // }
-          // else {
-          //   Models.Trail.query.each(_renderTrailLayer);
-          // }
           Models.TrailSegment.loadGeoJSON(onTrailSegmentData);
 
           // Populate search results view with all results.
@@ -383,18 +375,15 @@
         }
       }
 
+      // creates the segment layers as well as the segment models
       function onTrailSegmentData(data) {
-          $scope.trailsLayer = new MapTrailLayer({
+        trailsLayer = new MapTrailLayer({
           geojson: data
         }).addTo(Map);
       }
 
       function _searchFormSubmitted(evt) {
         searchInputElm.blur();
-      }
-
-      function _renderTrailLayer (t) {
-        trailLayers.push( MapTrailLayer.fromTrail(t).addTo(Map) );
       }
 
       // Initialize map marker and add events
@@ -559,15 +548,14 @@
         var fitOptions = {
           paddingBottomRight: [0, 250]
         };
-        if ($scope.trailsLayer){
-        $scope.trailsLayer.deselect();
-        if (trail) {
-          var segment_ids = trail.get('segment_ids');
-          $scope.trailsLayer.select(segment_ids);
-          Map.fitBounds( $scope.trailsLayer.getSelectedBounds(), fitOptions );
-               }
-               }  
-                
+        if (trailsLayer){
+          trailsLayer.deselect();
+          if (trail) {
+            var segment_ids = trail.get('segment_ids');
+            trailsLayer.select(segment_ids);
+            Map.fitBounds( trailsLayer.getSelectedBounds(), fitOptions );
+          }
+        }
       });
 
       $scope.nextTrail = function () {

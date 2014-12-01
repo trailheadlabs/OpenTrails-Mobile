@@ -18,11 +18,4 @@
     fc.attach(document.body);
   }, false);
 
-  //  This is very evil. But unfortunately it must be until Phonegap Build fully supports 
-  //  the status bar plugin.
-  var iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
-  if (!iOS) {
-    document.getElementById('status').style.display = 'none';
-  }
-
 })(angular, FastClick);

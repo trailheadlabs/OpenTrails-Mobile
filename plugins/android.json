@@ -1,0 +1,76 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {
+            "res/xml/config.xml": {
+                "parents": {
+                    "/*": [
+                        {
+                            "xml": "<feature name=\"CanOpen\"><param name=\"android-package\" value=\"com.soundsoftware.canopen.CanOpen\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"InAppBrowser\"><param name=\"android-package\" value=\"org.apache.cordova.inappbrowser.InAppBrowser\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"SplashScreen\"><param name=\"android-package\" value=\"org.apache.cordova.splashscreen.SplashScreen\" /></feature>",
+                            "count": 1
+                        }
+                    ]
+                }
+            },
+            "config.xml": {
+                "parents": {
+                    "/widget": [
+                        {
+                            "xml": "<feature name=\"TestFlightSDK\"><param name=\"android-package\" value=\"jp.wizcorp.phonegap.plugin.testflight.TestFlightPlugin\" /></feature>",
+                            "count": 1
+                        }
+                    ]
+                }
+            },
+            "AndroidManifest.xml": {
+                "parents": {
+                    "/manifest": [
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />",
+                            "count": 1
+                        }
+                    ],
+                    "/*": [
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
+                            "count": 1
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "installed_plugins": {
+        "com.philmerrell.cordova.canopen": {
+            "PACKAGE_NAME": "com.trailheadlabs.opentrails"
+        },
+        "com.testflightapp.cordova-plugin": {
+            "PACKAGE_NAME": "com.trailheadlabs.opentrails"
+        },
+        "org.apache.cordova.inappbrowser": {
+            "PACKAGE_NAME": "com.trailheadlabs.opentrails"
+        },
+        "org.apache.cordova.splashscreen": {
+            "PACKAGE_NAME": "com.trailheadlabs.opentrails"
+        },
+        "org.apache.cordova.geolocation": {
+            "PACKAGE_NAME": "com.trailheadlabs.opentrails"
+        }
+    },
+    "dependent_plugins": {}
+}
