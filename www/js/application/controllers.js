@@ -436,9 +436,16 @@
         if (!th || ng.isUndefined(th)) return false;
         $scope.selectedTrailHead = th;
         $scope.selectedTrails = th.trails.all();
-        $scope.selectedTrail = t || th.trails.first();
-        $scope.selectedPhoto = $scope.selectedTrail.photos.first();
         $scope.selectedTrailHeadSteward = th.stewards.first();
+        if ($scope.selectedTrails.length > 0) {
+          $scope.selectedTrail = t || th.trails.first();
+          $scope.selectedPhoto = $scope.selectedTrail.photos.first();
+        }
+        else {
+          // this is the case where the trailhead has no associated trails
+          $scope.selectedTrail = null;
+          $scope.selectedPhoto = null;
+        }
 
         mapContainerElm.classList.add('trail-selected');
 

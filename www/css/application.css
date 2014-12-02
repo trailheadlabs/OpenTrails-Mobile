@@ -540,7 +540,7 @@ body {
 }
 #trail-view #trail-and-trailhead-data #trail-data-header .trail-title {
   position: relative;
-  display: inline-block;
+  display: block;
   min-width: 75%;
   line-height: 1.2em;
   font-family: 'Merriweather Sans', sans-serif;
@@ -618,6 +618,9 @@ body {
 #trail-view #trail-and-trailhead-data .photo-box img {
   height: auto;
   max-width: 100%;
+}
+#trail-view #trail-and-trailhead-data .photo-box .img-placeholder {
+  text-align: center;
 }
 #trail-view #trail-and-trailhead-data .trailhead-data {
   padding-top: 10px;

@@ -124,7 +124,7 @@
 
       <section id="trail-view" class="transition closed">
         <header id="trail-nav">
-          <div class="change-trail">
+          <div class="change-trail" ng-show="selectedTrails.length > 0">
             <a href="#" class="previous-trail" ng-click="previousTrail()">
               <i class="fa fa-chevron-left active" ng-class="{hidden:hasMoreTrails()}"></i>
             </a>
@@ -145,11 +145,11 @@
         </header>
         <article id="trail-and-trailhead-data">
           <header id="trail-data-header">
-            <h3 class="trail-title">{{ selectedTrail.get('name') }}</h3>
+            <h3 class="trail-title">{{ selectedTrail.get('name') || selectedTrailHead.get('name')}}</h3>
             <h5 class="trail-attribute-distance">
               <distance-from-trailhead trailhead="selectedTrailHead" position="geoposition"/>
             </h5>
-            <h5 class="trail-attribute-length">{{ selectedTrail.getLength().toFixed(2) }} mi long</h5>
+            <h5 class="trail-attribute-length" ng-show="selectedTrail">{{ selectedTrail.getLength().toFixed(2) }} mi long</h5>
           </header>
           <section class="trail-data-content">
             <div class="trailhead-title-field">
