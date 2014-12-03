@@ -1,5 +1,4 @@
 platforms/*
-merges/*
 node_modules/*
 
 platforms/ios/cordova/console.log
