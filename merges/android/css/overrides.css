@@ -17,6 +17,10 @@
   top: 20px;
 }
 
+#map-view #map-container {
+  top: 0px;
+}
+
 #map-view #map-search {
   top: 10px;
 }
