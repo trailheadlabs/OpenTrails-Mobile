@@ -266,9 +266,9 @@ body {
 
   #map-container {
     position: absolute;
-    top: 0;
     width: 100%;
-    height: 100%;
+    top: 20px;
+    bottom: @footer-height;
     z-index: @z-index-1;
   }
 
@@ -291,7 +291,14 @@ body {
       width: 20px !important;
       height: 20px !important;
       margin-left: -10px !important;
-      margin-top: -10px !important;
+      margin-top: -20px !important;
+    }
+    .leaflet-marker-shadow
+    {
+      width:20px !important;
+      height:10px !important;
+      margin-left: -4px !important;
+      margin-top: -11px !important;
     }
     // Position marker cluster centers in shadow properly.
     .marker-cluster div
@@ -310,10 +317,18 @@ body {
     .leaflet-marker-icon[src="img/trailhead-marker-selected.png"],
     .leaflet-marker-icon[src="img/trailhead-marker-selected@2x.png"]
     {
-      margin-left: -24px !important;
-      margin-top: -24px !important;
       width:48px !important;
       height:48px !important;
+      margin-left: -24px !important;
+      margin-top: -48px !important;
+    }
+    .leaflet-marker-shadow[src="img/trailhead-marker-selected-shadow.png"],
+    .leaflet-marker-shadow[src="img/trailhead-marker-selected-shadow@2x.png"]
+    {
+      width:80px !important;
+      height:39px !important;
+      margin-left: -18px !important;
+      margin-top: -42px !important;
     }
   }
 }

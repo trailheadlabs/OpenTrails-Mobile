@@ -261,7 +261,7 @@
 
       var mapTileLayer = new MapTileLayer({}).addTo(Map);
       var currentLayer = "terrain";
-
+      var segmentTileLayer = new MapTileLayer({key: 'segments'}).addTo(Map);      
       function toggleMapTileLayer () {
         currentLayer = (currentLayer === "terrain" ? "satellite" : "terrain");
         mapTileLayer.setUrl(MapTileLayer.INDEX[currentLayer].url);
@@ -270,7 +270,7 @@
 
       $scope.toggleMapTileLayer = toggleMapTileLayer;
 
-      //
+      //MapTileLayer
       // SEARCH LOGIC
       //
 
@@ -357,8 +357,9 @@
           Models.TrailHead.query.each(_initializeTrailHeadMarker);
           trailHeadCluster.addTo(Map);
 
-          Models.TrailSegment.loadGeoJSON(onTrailSegmentData);
-
+         // Models.TrailSegment.loadGeoJSON(onTrailSegmentData);
+        trailsLayer = new MapTrailLayer({
+        }).addTo(Map);
           // Populate search results view with all results.
           clearSearch();
 
@@ -490,6 +491,7 @@
       // combine with a cluster at zoomed out levels.
       function moveMarkerToMap(marker)
       {
+         
         trailHeadCluster.removeLayer(marker);
         var index = trailHeadMarkers.indexOf(marker);
         if (index > -1) trailHeadMarkers.splice(index, 1);
