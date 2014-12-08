@@ -259,12 +259,15 @@
       // MAP TILES LOGIC
       //
 
-      var mapTileLayer = new MapTileLayer({}).addTo(Map);
-      var currentLayer = "terrain";
-      var segmentTileLayer = new MapTileLayer({key: 'segments'}).addTo(Map);      
+      var terrainTileLayer = new MapTileLayer({key: 'terrain'}).addTo(Map);
+      var satelliteTileLayer = new MapTileLayer({key: 'satellite'});
+      var segmentTileLayer = new MapTileLayer({key: 'segments'}).addTo(Map);
+
+      var currentLayer = terrainTileLayer;      
       function toggleMapTileLayer () {
-        currentLayer = (currentLayer === "terrain" ? "satellite" : "terrain");
-        mapTileLayer.setUrl(MapTileLayer.INDEX[currentLayer].url);
+        Map.removeLayer(currentLayer);
+        currentLayer = (currentLayer === terrainTileLayer ? satelliteTileLayer : terrainTileLayer);
+        Map.addLayer(currentLayer);
         toggleView(TRAILS_VIEW);
       }
 

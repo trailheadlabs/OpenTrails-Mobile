@@ -29,7 +29,7 @@
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
     TERRAIN_MAP_TILE_ENDPOINT: "trailheadlabs.b9b3498e",
     SATELLITE_MAP_TILE_ENDPOINT: "trailheadlabs.jih1cig0",
-    TRAILSEGMENT_MAP_TILE_ENDPOINT: "https://api.tiles.mapbox.com/v3/etown.89e30b47.json",
+    TRAILSEGMENT_MAP_TILE_ENDPOINT: "trailheadlabs.ad9272f9",
     MAPBOX_ACCESS_TOKEN: "pk.eyJ1IjoidHJhaWxoZWFkbGFicyIsImEiOiJnNDFLZ1Q4In0.t7YwoIwtzS_ghFsx8gU62A",
    // TRAILSEGMENT_MAP_TILE_ENDPOINT: "http://ec2-54-67-81-150.us-west-1.compute.amazonaws.com/roads/{z}/{x}/{y}.png",
     ATTRIBUTION: "<a href='https://www.mapbox.com/about/maps/' target='_system'>Maps &copy; Mapbox &copy; OpenStreetMap</a>"
@@ -1194,7 +1194,7 @@
   var MapTileLayer = MapLayer.inherit({
 
     defaults: {
-      key: "terrain",
+      key: null,
       url: TILE_LAYERS.terrain.url,
       options: {
         "detectRetina": true
@@ -1204,16 +1204,6 @@
     initialize: function () {
       this.delegate = L.mapbox.tileLayer( TILE_LAYERS[this.get('key')].url, this.get('options') );
     },
-
-    setUrl: function (url) {
-      this.set({url: url});
-      this.delegate.setUrl(url);
-      return this;
-    },
-
-    getUrl: function () {
-      return this.get('url');
-    }
 
   });
 
