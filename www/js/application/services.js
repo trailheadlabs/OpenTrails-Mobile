@@ -23,6 +23,7 @@
     // DEFAULT_MAP_CENTER: [ 40.0293099,-105.2399774 ],
     TRAIL_DATA_ENDPOINT: BASE_ENDPOINT + '/cached_trails_csv',
     TRAILHEAD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trailheads",
+    TRAILSEGMENT_API_ENDPOINT: BASE_ENDPOINT + "/trail_segments",
     TRAILSEGMENT_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trail_segments",
     STEWARD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_stewards_csv",
     NOTIFICATION_DATA_ENDPOINT: BASE_ENDPOINT + "/notifications?per_page=200",
@@ -1184,10 +1185,6 @@
     "satellite": {
       name: "Satellite",
       url: Configuration.SATELLITE_MAP_TILE_ENDPOINT
-    },
-    "segments": {
-      name: "Segments",
-      url: Configuration.TRAILSEGMENT_MAP_TILE_ENDPOINT
     }
   };
 
@@ -1197,7 +1194,9 @@
       key: null,
       url: TILE_LAYERS.terrain.url,
       options: {
-        "detectRetina": true
+        tileLayer: { 
+          "detectRetina": true
+        }
       }
     },
 
@@ -1208,6 +1207,38 @@
   });
 
   MapTileLayer.INDEX = TILE_LAYERS;
+
+  var VectorLayer = MapLayer.inherit({
+
+     defaults: {
+      options: {
+        url: Configuration.TRAILSEGMENT_API_ENDPOINT,
+        uniqueField: "id",
+        scaleRange: [10,18],
+        autoUpdate: true,
+        symbology: {
+          type: "single",
+          vectorOptions: {
+            fillColor: "#2f4a00",
+            fillOpacity: 0.4,
+            weight: 1.8,
+            color: "#2f4a00",
+            opacity: 1,
+            clickable: false
+          }
+        }
+      }
+    },
+
+    initialize: function () {
+      this.delegate = new lvector.Outerspatial(this.get('options'));
+    },
+
+    setMap: function (map) {
+      this.delegate.setMap(map.delegate);
+    },
+
+  });
 
   //
   // MAPGEOJSONLAYER MODEL
@@ -1484,6 +1515,12 @@
   module.factory('MapTileLayer', [
     function () {
       return MapTileLayer;
+    }
+  ]);
+
+  module.factory('VectorLayer', [
+    function () {
+      return VectorLayer;
     }
   ]);
 

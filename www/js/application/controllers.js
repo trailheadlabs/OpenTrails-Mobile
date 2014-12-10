@@ -110,8 +110,10 @@
     'MapTrailHeadMarker',
     'MapMarkerClusterGroup',
     'TrailSearch',
+    'VectorLayer',
 
-    function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, TrailsCanvasLayersz) {
+
+    function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, VectorLayer) {
 
       //
       // "CONSTANTS"
@@ -261,7 +263,6 @@
 
       var terrainTileLayer = new MapTileLayer({key: 'terrain'}).addTo(Map);
       var satelliteTileLayer = new MapTileLayer({key: 'satellite'});
-      var segmentTileLayer = new MapTileLayer({key: 'segments'}).addTo(Map);
 
       var currentLayer = terrainTileLayer;      
       function toggleMapTileLayer () {
@@ -270,6 +271,10 @@
         Map.addLayer(currentLayer);
         toggleView(TRAILS_VIEW);
       }
+
+
+      var vectorLayer = new VectorLayer();
+      vectorLayer.setMap(Map);
 
       $scope.toggleMapTileLayer = toggleMapTileLayer;
 
@@ -361,8 +366,9 @@
           trailHeadCluster.addTo(Map);
 
          // Models.TrailSegment.loadGeoJSON(onTrailSegmentData);
-        trailsLayer = new MapTrailLayer({
-        }).addTo(Map);
+          trailsLayer = new MapTrailLayer({ }).addTo(Map);
+
+
           // Populate search results view with all results.
           clearSearch();
 
