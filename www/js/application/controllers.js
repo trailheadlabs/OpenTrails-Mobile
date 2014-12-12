@@ -272,10 +272,6 @@
         toggleView(TRAILS_VIEW);
       }
 
-
-      var vectorLayer = new VectorLayer();
-      vectorLayer.setMap(Map);
-
       $scope.toggleMapTileLayer = toggleMapTileLayer;
 
       //MapTileLayer
@@ -367,6 +363,10 @@
 
          // Models.TrailSegment.loadGeoJSON(onTrailSegmentData);
           trailsLayer = new MapTrailLayer({ }).addTo(Map);
+
+          var vectorLayer = new VectorLayer();
+          vectorLayer.setOrganizations(Models.StewardDetail.query.collection);
+          vectorLayer.setMap(Map);
 
 
           // Populate search results view with all results.
