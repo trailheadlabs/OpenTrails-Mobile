@@ -11,6 +11,7 @@
 @header-height: 50px;
 @footer-height: 60px;
 @trail-header-height: 240px;
+@trail-image-height: 200px;
 
 @device-width: 320px;
 @device-height: 568px;
@@ -654,6 +655,7 @@ body {
       }
     }
   }
+
   #trail-and-trailhead-data {
     padding: 0 20px;
     height: 100%;
@@ -745,17 +747,42 @@ body {
     .photo-box {
       margin-left: -20px;
       margin-right: -20px;
+      height: @trail-image-height;
       img {
         height: auto;
         max-width: 100%;
+        max-height: @trail-image-height;
       }
       .img-placeholder {
         text-align: center;
+        padding-top: @trail-image-height/2 - 10;
+        display: block !important;
+      }
+      li {
+        display: table !important;
+        width: 100% !important;
+        text-align: center !important;
+      }
+      ul.image {
+        height: @trail-image-height;
+        margin: 0px;
+      }
+      .rn-carousel-indicator {
+        text-align: center;
+      }
+      div.rn-carousel-indicator span {
+        color: @light-gray-color;
+      }
+      div.rn-carousel-indicator span.active {
+        color: black;
+      }
+      .layer {
+        display: table-cell;
+        vertical-align: middle;
       }
     }
     .trailhead-data {
-      padding-top: 10px;
-
+      margin-top: 10px;
       .trail-subhead {
         width: 100%;
         font-family: @font-context;

@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/lib/mapbox/mapbox.css">
     <link rel="stylesheet" type="text/css" href="js/lib/leaflet/MarkerCluster.Default.css">
     <link rel="stylesheet" type="text/css" href="js/lib/leaflet/MarkerCluster.css">
+    <link rel="stylesheet" type="text/css" href="css/lib/carousel/angular-carousel.min.css">
     <link rel="stylesheet" type="text/css" href="css/application.css"/>
     <!-- <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet"> -->
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
@@ -160,8 +161,15 @@
               </a>
             </div>
             <div class="photo-box">
-              <img ng-if="selectedPhoto.get('url')" style="width:100%" ng-src="{{ selectedPhoto.get('url') }}"><img>
-              <div ng-if="!selectedPhoto.get('url')" class="img-placeholder">No image available</div>
+              <div ng-if="!selectedPhotos.length > 0" class="img-placeholder layer">No image available</div>
+              <ul rn-carousel rn-carousel-index="carouselIndex" class="image">
+                <li ng-repeat="photo in selectedPhotos">
+                <div class="layer">
+                  <img ng-src="{{ photo.get('url') }}" />
+                  </div>
+                </li>
+              </ul>
+              <div rn-carousel-indicators ng-if="selectedPhotos.length > 1" slides="selectedPhotos" rn-carousel-index="carouselIndex"></div>
             </div>
             <div class="trailhead-data">
               <p class="trail-subhead">Trail Activities</p>
@@ -302,14 +310,16 @@
     <script type="text/javascript" src="js/lib/underscore/underscore-min.js"></script>
     <script type="text/javascript" src="js/lib/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
-    <script type="text/javascript" src="js/lib/fastclick/fastclick.min.js"></script>
     <script type="text/javascript" src="js/lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="js/lib/angular/angular-route.min.js"></script>
+    <script type="text/javascript" src="js/lib/angular-touch/angular-touch.js"></script>
     <script type="text/javascript" src="js/lib/mapbox/mapbox.js"></script>
     <script type="text/javascript" src="js/lib/leaflet/leaflet.markercluster.js"></script>
     <script type="text/javascript" src="js/lib/lvector/lvector.js"></script>
     <script type="text/javascript" src="js/lib/lvector/layer/Layer.js"></script>
     <script type="text/javascript" src="js/lib/lvector/layer/GeoJSONLayer.js"></script>
+    <script type="text/javascript" src="js/lib/carousel/angular-carousel.min.js"></script>
+    <script type="text/javascript" src="js/lib/carousel/angular-touch.min.js"></script>
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/lib/papaparse.min.js"></script>
     <script type="text/javascript" src="js/application/layer/Outerspatial.js"></script>
