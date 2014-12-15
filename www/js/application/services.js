@@ -26,6 +26,7 @@
     TRAILSEGMENT_API_ENDPOINT: BASE_ENDPOINT + "/trail_segments",
     TRAILSEGMENT_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trail_segments",
     STEWARD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_stewards_csv",
+    STEWARD_DETAIL_ENDPOINT: BASE_ENDPOINT + "/organizations",
     NOTIFICATION_DATA_ENDPOINT: BASE_ENDPOINT + "/notifications?per_page=200",
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
     TERRAIN_MAP_TILE_ENDPOINT: "trailheadlabs.b9b3498e",
@@ -910,6 +911,31 @@
 
   });
 
+ var StewardDetail = Model.inherit({
+
+    defaults: {
+      "id": null,
+      "optimized_trail_segments_url": null,
+      "extent": null
+    },
+
+  }, {
+
+    query: new Query(),
+
+    load: function (data,lastPage) {
+      var results = this.query.collection || [];
+
+      results.push( new StewardDetail(data) );
+      
+      this.query.setCollection(results);
+      if(lastPage){
+        this.loaded = true;
+      }
+
+    }
+
+  });
   //
   // NOTIFICATION MODEL
   //
@@ -1236,6 +1262,10 @@
 
     setMap: function (map) {
       this.delegate.setMap(map.delegate);
+    },
+
+    setOrganizations: function (organizations) {
+      this.delegate.setOrganizations(organizations);
     },
 
   });
@@ -1599,6 +1629,7 @@
         "Trail": Trail,
         "TrailSegment": TrailSegment,
         "Steward": Steward,
+        "StewardDetail": StewardDetail,
         "Notification": Notification,
         "Photo": Photo
       };
@@ -1634,8 +1665,15 @@
           $http.get(pageUrl).then(
             function (res) {
               data = res.data;
-              if (key == "TrailData" || key == "StewardData") {
+              if (key === "TrailData" || key === "StewardData") {
                 data = parseCSV(data);
+              }
+
+              if (key === "StewardData") {
+                 // we need to load the details to get the bounds
+                ng.forEach(data, function (steward) {
+                  loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
+                });
               }
               // window.localStorage.setItem(key, JSON.stringify(data) );
               if(data.paging) {
