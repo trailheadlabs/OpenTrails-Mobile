@@ -112,7 +112,6 @@
     'TrailSearch',
     'VectorLayer',
 
-
     function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, VectorLayer) {
 
       //
@@ -348,9 +347,9 @@
       $scope.selectedTrailHead = null;
       $scope.selectedSteward = null;
       $scope.selectedTrail = null;
-      $scope.selectedPhoto = null;
+      $scope.selectedPhotos = [];
       $scope.selectedTrails = [];
-
+      $scope.carouselIndex = 0;
       $scope.appLoaded = false;
       function onLoad (loaded) {
         if (loaded) {
@@ -385,13 +384,6 @@
         }
       }
 
-      // creates the segment layers as well as the segment models
-      function onTrailSegmentData(data) {
-        trailsLayer = new MapTrailLayer({
-          geojson: data
-        }).addTo(Map);
-      }
-
       function _searchFormSubmitted(evt) {
         searchInputElm.blur();
       }
@@ -417,10 +409,6 @@
           $scope.$apply(function () { deselectTrailHead( record ); });
         }
       }
-
-      // These two methods are only used if USE_CANVAS_TRAILS = false.
-      function selectTrailLayer (layer) { if (layer) layer.select(); }
-      function deselectTrailLayer (layer) { if (layer) layer.deselect(); }
 
       function openTrailHeadInNativeMaps (trailhead) {
         var position = $scope.selectedTrailHead.getLatLng();
@@ -449,12 +437,13 @@
         $scope.selectedTrailHeadSteward = th.stewards.first();
         if ($scope.selectedTrails.length > 0) {
           $scope.selectedTrail = t || th.trails.first();
-          $scope.selectedPhoto = $scope.selectedTrail.photos.first();
+          $scope.selectedPhotos = $scope.selectedTrail.photos.all();
+          $scope.imagetest = ['http://critterbabies.com/wp-content/uploads/2013/11/kittens.jpg','http://www.tehcute.com/pics/201110/marshmellow-kitten-big.jpg','http://www.adiumxtras.com/images/thumbs/dango_status_icon_set_7_19047_6248_thumb.png']
         }
         else {
           // this is the case where the trailhead has no associated trails
           $scope.selectedTrail = null;
-          $scope.selectedPhoto = null;
+          $scope.selectedPhotos = [];
         }
 
         mapContainerElm.classList.add('trail-selected');
@@ -481,7 +470,7 @@
         $scope.selectedTrailHead = null;
         $scope.selectedTrails = [];
         $scope.selectedTrail = null;
-        $scope.selectedPhoto = null;
+        $scope.selectedPhotos = [];
         $scope.selectedSteward = null;
 
         mapContainerElm.classList.remove('trail-selected');
@@ -490,7 +479,7 @@
       function selectTrail (t) {
         if (!t || ng.isUndefined(t)) return false;
         $scope.selectedTrail = t;
-        $scope.selectedPhoto = t.photos.first();
+        $scope.selectedPhotos = t.photos.all();
       }
 
       $scope.selectTrail = selectTrail;
@@ -563,12 +552,13 @@
       });
 
       $scope.$watch('selectedTrail', function (trail) {
-        var fitOptions = {
-          paddingBottomRight: [0, 250]
-        };
-        if (trailsLayer){
-          trailsLayer.deselect();
-          if (trail) {
+        if (trail) {
+          $scope.selectedPhotos = trail.photos.all();
+          if (trailsLayer){
+            var fitOptions = {
+              paddingBottomRight: [0, 250]
+            };
+            trailsLayer.deselect();
             var segment_ids = trail.get('segment_ids');
             trailsLayer.select(segment_ids);
             Map.fitBounds( trailsLayer.getSelectedBounds(), fitOptions );
