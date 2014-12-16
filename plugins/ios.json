@@ -25,22 +25,12 @@
                             "count": 1
                         }
                     ],
-                    "/widget": [
-                        {
-                            "xml": "<feature name=\"TestFlightSDK\"><param name=\"ios-package\" value=\"CDVTestFlight\" /></feature>",
-                            "count": 1
-                        }
-                    ]
+                    "/widget": []
                 }
             },
             "framework": {
                 "parents": {
-                    "libz.dylib": [
-                        {
-                            "xml": "false",
-                            "count": 1
-                        }
-                    ],
+                    "libz.dylib": [],
                     "CoreLocation.framework": [
                         {
                             "xml": "false",
@@ -69,9 +59,6 @@
     },
     "installed_plugins": {
         "com.philmerrell.cordova.canopen": {
-            "PACKAGE_NAME": "com.trailheadlabs.opentrails"
-        },
-        "com.testflightapp.cordova-plugin": {
             "PACKAGE_NAME": "com.trailheadlabs.opentrails"
         },
         "org.apache.cordova.geolocation": {
