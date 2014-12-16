@@ -627,16 +627,42 @@ body {
 #trail-view #trail-and-trailhead-data .photo-box {
   margin-left: -20px;
   margin-right: -20px;
+  height: 200px;
 }
 #trail-view #trail-and-trailhead-data .photo-box img {
   height: auto;
   max-width: 100%;
+  max-height: 200px;
 }
 #trail-view #trail-and-trailhead-data .photo-box .img-placeholder {
   text-align: center;
+  padding-top: 90px;
+  display: block !important;
+}
+#trail-view #trail-and-trailhead-data .photo-box li {
+  display: table !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+#trail-view #trail-and-trailhead-data .photo-box ul.image {
+  height: 200px;
+  margin: 0px;
+}
+#trail-view #trail-and-trailhead-data .photo-box .rn-carousel-indicator {
+  text-align: center;
+}
+#trail-view #trail-and-trailhead-data .photo-box div.rn-carousel-indicator span {
+  color: #a3a3a3;
+}
+#trail-view #trail-and-trailhead-data .photo-box div.rn-carousel-indicator span.active {
+  color: black;
+}
+#trail-view #trail-and-trailhead-data .photo-box .layer {
+  display: table-cell;
+  vertical-align: middle;
 }
 #trail-view #trail-and-trailhead-data .trailhead-data {
-  padding-top: 10px;
+  margin-top: 10px;
 }
 #trail-view #trail-and-trailhead-data .trailhead-data .trail-subhead {
   width: 100%;
