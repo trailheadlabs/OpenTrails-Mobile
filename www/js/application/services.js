@@ -927,7 +927,7 @@
       var results = this.query.collection || [];
 
       results.push( new StewardDetail(data) );
-      
+
       this.query.setCollection(results);
       if(lastPage){
         this.loaded = true;
@@ -1220,7 +1220,7 @@
       key: null,
       url: TILE_LAYERS.terrain.url,
       options: {
-        tileLayer: { 
+        tileLayer: {
           "detectRetina": true
         }
       }
@@ -1350,7 +1350,8 @@
         return new L.DivIcon({
             html: '<div><span></div>',
             className: 'trailhead-icon-multi',
-            iconSize: new L.Point(40, 40)
+            iconSize: new L.Point(40, 40),
+            iconAnchor: new L.Point(20,40)
           });
       }
     },
@@ -1489,7 +1490,7 @@
   //
 
   var MapTrailLayer = MapLayer.inherit({
- 
+
     defaults: {
       selectedBounds: null,
       options: {
@@ -1510,7 +1511,7 @@
       this.selectedBounds = new L.LatLngBounds();
       for (var i = 0; i < ids.length; i++) {
         var id = ids[i];
-        var segment = TrailSegment.query.where({'key':'id','evaluator':'equals','value':id}).first(); 
+        var segment = TrailSegment.query.where({'key':'id','evaluator':'equals','value':id}).first();
         var layer = L.geoJson(segment.toGeoJson(), this.get('options')).addTo(this.delegate);
         this.selectedBounds.extend(layer.getBounds());
       }
