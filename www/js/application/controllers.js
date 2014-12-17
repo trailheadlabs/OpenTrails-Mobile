@@ -638,7 +638,7 @@
         var BOTTOM_PADDING = 20;
         var calcValue = viewportHeight - (FOOTER_HEIGHT+TRAIL_NAV_HEIGHT+trailHeaderHeight+BOTTOM_PADDING);
         //  annoying hack. Remove once phb fully supports the statusbar plugin.
-        if(!is_ios)    
+        if(!utils.is_ios)    
             calcValue += 20;
         trailViewElm.style.webkitTransform = 'translate3d(0, '+calcValue+'px, 0)';
         trailViewElm.style.webkitTransition = '-webkit-transform 0.5s';

@@ -328,8 +328,7 @@
     <script type="text/javascript" src="js/application.js"></script>
     <script type="text/javascript">
       //  very bad.  but needed since phonegap build doesn't support statusbar plugin
-      var is_ios = /(iPad|iPhone|iPod)/g.test( navigator.userAgent );
-        if(!is_ios)    
+        if(!utils.is_ios)    
           $('<link rel="stylesheet" type="text/css" href="css/overrides.css" />').appendTo("head");
     </script>
   </body>
