@@ -11,6 +11,7 @@
 @header-height: 50px;
 @footer-height: 60px;
 @trail-header-height: 240px;
+@trail-image-height: 200px;
 
 @device-width: 320px;
 @device-height: 568px;
@@ -266,9 +267,9 @@ body {
 
   #map-container {
     position: absolute;
-    top: 0;
     width: 100%;
-    height: 100%;
+    top: 20px;
+    bottom: @footer-height;
     z-index: @z-index-1;
   }
 
@@ -291,7 +292,14 @@ body {
       width: 20px !important;
       height: 20px !important;
       margin-left: -10px !important;
-      margin-top: -10px !important;
+      margin-top: -20px !important;
+    }
+    .leaflet-marker-shadow
+    {
+      width:20px !important;
+      height:10px !important;
+      margin-left: -4px !important;
+      margin-top: -11px !important;
     }
     // Position marker cluster centers in shadow properly.
     .marker-cluster div
@@ -310,10 +318,18 @@ body {
     .leaflet-marker-icon[src="img/trailhead-marker-selected.png"],
     .leaflet-marker-icon[src="img/trailhead-marker-selected@2x.png"]
     {
-      margin-left: -24px !important;
-      margin-top: -24px !important;
       width:48px !important;
       height:48px !important;
+      margin-left: -24px !important;
+      margin-top: -48px !important;
+    }
+    .leaflet-marker-shadow[src="img/trailhead-marker-selected-shadow.png"],
+    .leaflet-marker-shadow[src="img/trailhead-marker-selected-shadow@2x.png"]
+    {
+      width:80px !important;
+      height:39px !important;
+      margin-left: -18px !important;
+      margin-top: -42px !important;
     }
   }
 }
@@ -639,6 +655,7 @@ body {
       }
     }
   }
+
   #trail-and-trailhead-data {
     padding: 0 20px;
     height: 100%;
@@ -655,7 +672,7 @@ body {
       border-bottom: 1px solid @white-color;
       .trail-title {
         position: relative;
-        display: inline-block;
+        display: block;
         min-width: 75%;
         line-height: 1.2em;
         font-family: @font-display;
@@ -730,14 +747,42 @@ body {
     .photo-box {
       margin-left: -20px;
       margin-right: -20px;
+      height: @trail-image-height;
       img {
         height: auto;
         max-width: 100%;
+        max-height: @trail-image-height;
+      }
+      .img-placeholder {
+        text-align: center;
+        padding-top: @trail-image-height/2 - 10;
+        display: block !important;
+      }
+      li {
+        display: table !important;
+        width: 100% !important;
+        text-align: center !important;
+      }
+      ul.image {
+        height: @trail-image-height;
+        margin: 0px;
+      }
+      .rn-carousel-indicator {
+        text-align: center;
+      }
+      div.rn-carousel-indicator span {
+        color: @light-gray-color;
+      }
+      div.rn-carousel-indicator span.active {
+        color: black;
+      }
+      .layer {
+        display: table-cell;
+        vertical-align: middle;
       }
     }
     .trailhead-data {
-      padding-top: 10px;
-
+      margin-top: 10px;
       .trail-subhead {
         width: 100%;
         font-family: @font-context;

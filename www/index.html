@@ -6,9 +6,10 @@
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
     <title>To The Trails</title>
     <link rel="stylesheet" type="text/css" href="css/lib/normalize/normalize.css">
-    <link rel="stylesheet" type="text/css" href="js/lib/leaflet/leaflet.css">
+    <link rel="stylesheet" type="text/css" href="css/lib/mapbox/mapbox.css">
     <link rel="stylesheet" type="text/css" href="js/lib/leaflet/MarkerCluster.Default.css">
     <link rel="stylesheet" type="text/css" href="js/lib/leaflet/MarkerCluster.css">
+    <link rel="stylesheet" type="text/css" href="css/lib/carousel/angular-carousel.min.css">
     <link rel="stylesheet" type="text/css" href="css/application.css"/>
     <!-- <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet"> -->
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
@@ -124,7 +125,7 @@
 
       <section id="trail-view" class="transition closed">
         <header id="trail-nav">
-          <div class="change-trail">
+          <div class="change-trail" ng-show="selectedTrails.length > 0">
             <a href="#" class="previous-trail" ng-click="previousTrail()">
               <i class="fa fa-chevron-left active" ng-class="{hidden:hasMoreTrails()}"></i>
             </a>
@@ -145,11 +146,11 @@
         </header>
         <article id="trail-and-trailhead-data">
           <header id="trail-data-header">
-            <h3 class="trail-title">{{ selectedTrail.get('name') }}</h3>
+            <h3 class="trail-title">{{ selectedTrail.get('name') || selectedTrailHead.get('name')}}</h3>
             <h5 class="trail-attribute-distance">
               <distance-from-trailhead trailhead="selectedTrailHead" position="geoposition"/>
             </h5>
-            <h5 class="trail-attribute-length">{{ selectedTrail.getLength().toFixed(2) }} mi long</h5>
+            <h5 class="trail-attribute-length" ng-show="selectedTrail">{{ selectedTrail.getLength().toFixed(2) }} mi long</h5>
           </header>
           <section class="trail-data-content">
             <div class="trailhead-title-field">
@@ -160,8 +161,15 @@
               </a>
             </div>
             <div class="photo-box">
-              <img ng-if="selectedPhoto.get('url')" style="width:100%" ng-src="{{ selectedPhoto.get('url') }}"><img>
-              <div ng-if="!selectedPhoto.get('url')" class="img-placeholder">No image available</div>
+              <div ng-if="!selectedPhotos.length > 0" class="img-placeholder layer">No image available</div>
+              <ul rn-carousel rn-carousel-index="carouselIndex" class="image">
+                <li ng-repeat="photo in selectedPhotos">
+                <div class="layer">
+                  <img ng-src="{{ photo.get('url') }}" />
+                  </div>
+                </li>
+              </ul>
+              <div rn-carousel-indicators ng-if="selectedPhotos.length > 1" slides="selectedPhotos" rn-carousel-index="carouselIndex"></div>
             </div>
             <div class="trailhead-data">
               <p class="trail-subhead">Trail Activities</p>
@@ -300,14 +308,21 @@
     </div>
 
     <script type="text/javascript" src="js/lib/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="js/lib/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
-    <script type="text/javascript" src="js/lib/fastclick/fastclick.min.js"></script>
     <script type="text/javascript" src="js/lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="js/lib/angular/angular-route.min.js"></script>
-    <script type="text/javascript" src="js/lib/leaflet/leaflet.js"></script>
+    <script type="text/javascript" src="js/lib/angular-touch/angular-touch.js"></script>
+    <script type="text/javascript" src="js/lib/mapbox/mapbox.js"></script>
     <script type="text/javascript" src="js/lib/leaflet/leaflet.markercluster.js"></script>
+    <script type="text/javascript" src="js/lib/lvector/lvector.js"></script>
+    <script type="text/javascript" src="js/lib/lvector/layer/Layer.js"></script>
+    <script type="text/javascript" src="js/lib/lvector/layer/GeoJSONLayer.js"></script>
+    <script type="text/javascript" src="js/lib/carousel/angular-carousel.min.js"></script>
+    <script type="text/javascript" src="js/lib/carousel/angular-touch.min.js"></script>
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/lib/papaparse.min.js"></script>
+    <script type="text/javascript" src="js/application/layer/Outerspatial.js"></script>
     <script type="text/javascript" src="js/application/controllers.js"></script>
     <script type="text/javascript" src="js/application/routes.js"></script>
     <script type="text/javascript" src="js/application/services.js"></script>

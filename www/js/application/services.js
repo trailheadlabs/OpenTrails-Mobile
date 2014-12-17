@@ -23,15 +23,18 @@
     // DEFAULT_MAP_CENTER: [ 40.0293099,-105.2399774 ],
     TRAIL_DATA_ENDPOINT: BASE_ENDPOINT + '/cached_trails_csv',
     TRAILHEAD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trailheads",
+    TRAILSEGMENT_API_ENDPOINT: BASE_ENDPOINT + "/trail_segments",
     TRAILSEGMENT_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_trail_segments",
     STEWARD_DATA_ENDPOINT: BASE_ENDPOINT + "/cached_stewards_csv",
+    STEWARD_DETAIL_ENDPOINT: BASE_ENDPOINT + "/organizations",
     NOTIFICATION_DATA_ENDPOINT: BASE_ENDPOINT + "/notifications?per_page=200",
     PHOTO_DATA_ENDPOINT: BASE_ENDPOINT + "/images?per_page=200",
-    TERRAIN_MAP_TILE_ENDPOINT: "http://{s}.tiles.mapbox.com/v3/trailheadlabs.b9b3498e/{z}/{x}/{y}.png",
-    SATELLITE_MAP_TILE_ENDPOINT: "https://{s}.tiles.mapbox.com/v3/trailheadlabs.jih1cig0/{z}/{x}/{y}.png",
-
-    LEAFLET_ATTRIBUTION: '<a href="#" onclick="window.open(\'http://leafletjs.com\',\'_system\')">Leaflet</a>',
-    OSM_ATTRIBUTION: '&copy; <a href="#" onclick="window.open(\'http://osm.org/copyright\',\'_system\')">OpenStreetMap</a> contributors'
+    TERRAIN_MAP_TILE_ENDPOINT: "trailheadlabs.b9b3498e",
+    SATELLITE_MAP_TILE_ENDPOINT: "trailheadlabs.jih1cig0",
+    TRAILSEGMENT_MAP_TILE_ENDPOINT: "trailheadlabs.ad9272f9",
+    MAPBOX_ACCESS_TOKEN: "pk.eyJ1IjoidHJhaWxoZWFkbGFicyIsImEiOiJnNDFLZ1Q4In0.t7YwoIwtzS_ghFsx8gU62A",
+   // TRAILSEGMENT_MAP_TILE_ENDPOINT: "http://ec2-54-67-81-150.us-west-1.compute.amazonaws.com/roads/{z}/{x}/{y}.png",
+    ATTRIBUTION: "<a href='https://www.mapbox.com/about/maps/' target='_system'>Maps &copy; Mapbox &copy; OpenStreetMap</a>"
   };
 
   //
@@ -781,18 +784,23 @@
 
     query: new Query(),
 
-    load: function (feature) {
+    load: function (data,lastPage) {
       var results = this.query.collection || [];
-      if(feature.properties.outerspatial){
-        feature.properties.id = feature.properties.outerspatial.id;
-        feature.properties.steward_id = feature.properties.outerspatial.steward_id;
+
+      if (data.features) {
+
+        ng.forEach(data.features, function (feature) {
+          if(feature.properties.outerspatial){
+            feature.properties.id = feature.properties.outerspatial.id;
+            feature.properties.steward_id = feature.properties.outerspatial.steward_id;
+          }
+
+          feature.properties.geometry = feature.geometry;
+          results.push( new TrailSegment(feature.properties) );
+
+        });
       }
-
-      feature.properties.geometry = feature.geometry;
-      results.push( new TrailSegment(feature.properties) );
-      this.query.setCollection(results);
     }
-
   });
 
   //
@@ -903,6 +911,31 @@
 
   });
 
+ var StewardDetail = Model.inherit({
+
+    defaults: {
+      "id": null,
+      "optimized_trail_segments_url": null,
+      "extent": null
+    },
+
+  }, {
+
+    query: new Query(),
+
+    load: function (data,lastPage) {
+      var results = this.query.collection || [];
+
+      results.push( new StewardDetail(data) );
+
+      this.query.setCollection(results);
+      if(lastPage){
+        this.loaded = true;
+      }
+
+    }
+
+  });
   //
   // NOTIFICATION MODEL
   //
@@ -1042,14 +1075,18 @@
       options: {
         "zoomControl": false,
         "detectRetina": true,
+        "attributionControl": false,
         "minZoom": Configuration.MIN_ZOOM_LEVEL,
         "maxZoom": Configuration.MAX_ZOOM_LEVEL
       }
     },
 
     initialize: function () {
-      this.delegate = L.map( this.get('el'), this.get('options') );
-      this.delegate.attributionControl.setPrefix(Configuration.LEAFLET_ATTRIBUTION);
+      L.mapbox.accessToken = Configuration.MAPBOX_ACCESS_TOKEN;
+      this.delegate = L.mapbox.map( this.get('el'), null, this.get('options') );
+      var attribution = L.control.attribution().addTo(this.delegate);
+      attribution.setPrefix('');
+      attribution.addAttribution(Configuration.ATTRIBUTION);
     },
 
     setView: function (position, zoom) {
@@ -1180,30 +1217,58 @@
   var MapTileLayer = MapLayer.inherit({
 
     defaults: {
+      key: null,
       url: TILE_LAYERS.terrain.url,
       options: {
-        "detectRetina": true,
-        "attribution": Configuration.OSM_ATTRIBUTION
+        tileLayer: {
+          "detectRetina": true
+        }
       }
     },
 
     initialize: function () {
-      this.delegate = L.tileLayer( this.get('url'), this.get('options') );
+      this.delegate = L.mapbox.tileLayer( TILE_LAYERS[this.get('key')].url, this.get('options') );
     },
-
-    setUrl: function (url) {
-      this.set({url: url});
-      this.delegate.setUrl(url);
-      return this;
-    },
-
-    getUrl: function () {
-      return this.get('url');
-    }
 
   });
 
   MapTileLayer.INDEX = TILE_LAYERS;
+
+  var VectorLayer = MapLayer.inherit({
+
+     defaults: {
+      options: {
+        url: Configuration.TRAILSEGMENT_API_ENDPOINT,
+        uniqueField: "id",
+        scaleRange: [10,18],
+        autoUpdate: true,
+        symbology: {
+          type: "single",
+          vectorOptions: {
+            fillColor: "#2f4a00",
+            fillOpacity: 0.4,
+            weight: 1.8,
+            color: "#2f4a00",
+            opacity: 1,
+            clickable: false
+          }
+        }
+      }
+    },
+
+    initialize: function () {
+      this.delegate = new lvector.Outerspatial(this.get('options'));
+    },
+
+    setMap: function (map) {
+      this.delegate.setMap(map.delegate);
+    },
+
+    setOrganizations: function (organizations) {
+      this.delegate.setOrganizations(organizations);
+    },
+
+  });
 
   //
   // MAPGEOJSONLAYER MODEL
@@ -1217,7 +1282,7 @@
     },
 
     initialize: function () {
-      this.delegate = L.geoJson(this.get('geojson'), this.get('options'));
+      this.delegate = L.mapbox.geoJson(this.get('geojson'), this.get('options'));
     }
 
   });
@@ -1285,7 +1350,8 @@
         return new L.DivIcon({
             html: '<div><span></div>',
             className: 'trailhead-icon-multi',
-            iconSize: new L.Point(40, 40)
+            iconSize: new L.Point(40, 40),
+            iconAnchor: new L.Point(20,40)
           });
       }
     },
@@ -1395,15 +1461,24 @@
 
   MapTrailHeadMarker.DeselectedIcon = new MapIcon({
     iconUrl: 'img/trailhead-marker-deselected.png',
+    shadowUrl: 'img/trailhead-marker-deselected-shadow.png',
+    shadowRetinaUrl: 'img/trailhead-marker-deselected-shadow@2x.png',
+    shadowSize: [ 40, 19 ],
+    shadowAnchor: [ 7, 21 ],
     iconRetinaUrl: 'img/trailhead-marker-deselected@2x.png',
-    iconSize: [ 34, 34 ]
+    iconSize: [ 34, 34 ],
+    iconAnchor: [ 17, 34 ]
   });
 
   MapTrailHeadMarker.SelectedIcon = new MapIcon({
     iconUrl: 'img/trailhead-marker-selected.png',
+    shadowUrl: 'img/trailhead-marker-selected-shadow.png',
+    shadowRetinaUrl: 'img/trailhead-marker-selected-shadow@2x.png',
     iconRetinaUrl: 'img/trailhead-marker-selected@2x.png',
+    shadowSize: [ 80, 39 ],
+    shadowAnchor: [ 14, 42 ],
     iconSize: [ 48, 48 ],
-    iconAnchor: [ 24, 24 ]
+    iconAnchor: [ 24, 48 ]
   });
 
   MapTrailHeadMarker.fromTrailHead = function (trailHead) {
@@ -1414,57 +1489,38 @@
   // MAPTRAILLAYER MODEL
   //
 
-  var MapTrailLayer = MapGeoJsonLayer.inherit({
-    selected: [],
-    selectedBounds: null,
-    segmentLayers: [],
+  var MapTrailLayer = MapLayer.inherit({
+
     defaults: {
-      geojson: null,
+      selectedBounds: null,
       options: {
         style: {
-          color: "#e29c4a",
-          opacity: 1
-        },
-        highlightStyle: {
           color: "#e2504a",
           opacity: 1
         },
         smoothFactor: 2,
-
       }
     },
 
     initialize: function () {
-      this.get('options').onEachFeature = this.onEachFeature.bind(this);
-      this.delegate = L.geoJson(this.get('geojson'), this.get('options'));
+      this.delegate = L.layerGroup();
     },
 
     select: function (ids) {
+      this.delegate.clearLayers();
+      this.selectedBounds = new L.LatLngBounds();
       for (var i = 0; i < ids.length; i++) {
         var id = ids[i];
-        this.selectedBounds.extend(this.segmentLayers[id].getBounds());
-        this.segmentLayers[id].setStyle(this.get('options').highlightStyle);
-        this.segmentLayers[id].bringToFront();
-        this.selected.push(id);
+        var segment = TrailSegment.query.where({'key':'id','evaluator':'equals','value':id}).first();
+        var layer = L.geoJson(segment.toGeoJson(), this.get('options')).addTo(this.delegate);
+        this.selectedBounds.extend(layer.getBounds());
       }
       return this;
     },
 
     deselect: function () {
-      for (var i = 0; i < this.selected.length; i++) {
-        var id = this.selected[i];
-        this.segmentLayers[id].setStyle(this.get('options').style);
-        this.segmentLayers[id].bringToBack();
-      }
-      this.selected = [];
-      this.selectedBounds = new L.LatLngBounds();
+      this.delegate.clearLayers();
       return this;
-    },
-
-    onEachFeature : function(feature, layer) {
-      var id = feature.properties.outerspatial.id;
-      this.segmentLayers[id] = layer;
-      TrailSegment.load(feature);
     },
 
     getSelectedBounds : function() {
@@ -1490,6 +1546,12 @@
   module.factory('MapTileLayer', [
     function () {
       return MapTileLayer;
+    }
+  ]);
+
+  module.factory('VectorLayer', [
+    function () {
+      return VectorLayer;
     }
   ]);
 
@@ -1568,6 +1630,7 @@
         "Trail": Trail,
         "TrailSegment": TrailSegment,
         "Steward": Steward,
+        "StewardDetail": StewardDetail,
         "Notification": Notification,
         "Photo": Photo
       };
@@ -1603,8 +1666,15 @@
           $http.get(pageUrl).then(
             function (res) {
               data = res.data;
-              if (key == "TrailData" || key == "StewardData") {
+              if (key === "TrailData" || key === "StewardData") {
                 data = parseCSV(data);
+              }
+
+              if (key === "StewardData") {
+                 // we need to load the details to get the bounds
+                ng.forEach(data, function (steward) {
+                  loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
+                });
               }
               // window.localStorage.setItem(key, JSON.stringify(data) );
               if(data.paging) {
@@ -1631,7 +1701,7 @@
       loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
       loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
       //  don't load segment models here since they are loaded as the geoJSON is applied
-      //  loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
+      loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
       loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
       loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
       loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);

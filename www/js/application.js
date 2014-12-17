@@ -1,11 +1,13 @@
-(function (ng, fc) {
+(function (ng) {
   'use strict';
 
   var module = ng.module('trails', [
     'trails.routes',
     'trails.controllers',
     'trails.services',
-    'trails.directives'
+    'trails.directives',
+    'angular-carousel',
+    'ngTouch'
   ]);
 
   var onDeviceReady = function () {
@@ -14,8 +16,4 @@
 
   document.addEventListener('deviceready', onDeviceReady, false);
 
-  window.addEventListener('load', function() {
-    fc.attach(document.body);
-  }, false);
-
-})(angular, FastClick);
+})(angular);
