@@ -248,6 +248,7 @@
   }
 
   TrailSearch.perform = function (params) {
+    var start = new Date()
     var nameQuery = [];
     var descQuery = [];
 
@@ -323,6 +324,7 @@
       }
     });
 
+    alert('end' + (new Date() - start));
 
     return filteredResults;
   };
