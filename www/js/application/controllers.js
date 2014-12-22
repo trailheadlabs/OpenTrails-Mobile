@@ -92,7 +92,19 @@
       $scope.geoposition = GeoPosition;
 
       $scope.openInNativeMaps = function () {
-        window.open('maps:q='+$scope.steward.get('address'), '_system');
+        appAvailability.check(
+            'comgooglemaps://', // URI Scheme
+            function() {  // Success callback
+              var urlPrefix = 'comgooglemaps://';
+              window.open(urlPrefix+'?daddr='+$scope.steward.get('address'), '_system');
+
+            },
+            function() {  // Error callback
+              var urlPrefix = 'https://maps.google.com';
+              window.open(urlPrefix+'?daddr='+$scope.steward.get('address'), '_system');
+
+            }
+        );
       };
 
     }
@@ -213,7 +225,7 @@
 
 
       function recenter () {
-        // this is temporary. we reset the zoom to closer since we launched the map zoomed out for demo 
+        // this is temporary. we reset the zoom to closer since we launched the map zoomed out for demo
         Map.DEFAULT_ZOOM = 9;
         document.addEventListener("deviceready", function(){
           console.log('Device Ready!');
@@ -263,7 +275,7 @@
       var terrainTileLayer = new MapTileLayer({key: 'terrain'}).addTo(Map);
       var satelliteTileLayer = new MapTileLayer({key: 'satellite'});
 
-      var currentLayer = terrainTileLayer;      
+      var currentLayer = terrainTileLayer;
       function toggleMapTileLayer () {
         Map.removeLayer(currentLayer);
         currentLayer = (currentLayer === terrainTileLayer ? satelliteTileLayer : terrainTileLayer);
@@ -423,7 +435,6 @@
             function() {  // Error callback
               var urlPrefix = 'https://maps.google.com';
               window.open(urlPrefix+'?daddr='+position.join(','), '_system');
-
             }
         );
       }
@@ -489,7 +500,7 @@
       // combine with a cluster at zoomed out levels.
       function moveMarkerToMap(marker)
       {
-         
+
         trailHeadCluster.removeLayer(marker);
         var index = trailHeadMarkers.indexOf(marker);
         if (index > -1) trailHeadMarkers.splice(index, 1);
@@ -637,6 +648,9 @@
         var viewportHeight = window.innerHeight;
         var BOTTOM_PADDING = 20;
         var calcValue = viewportHeight - (FOOTER_HEIGHT+TRAIL_NAV_HEIGHT+trailHeaderHeight+BOTTOM_PADDING);
+        //  annoying hack. Remove once phb fully supports the statusbar plugin.
+        if(!utils.is_ios)    
+            calcValue += 20;
         trailViewElm.style.webkitTransform = 'translate3d(0, '+calcValue+'px, 0)';
         trailViewElm.style.webkitTransition = '-webkit-transform 0.5s';
         trailViewElm.classList.remove('closed');
