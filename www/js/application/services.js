@@ -111,11 +111,16 @@
       }
     },
     "intersects": function (lhs, rhs) {
-      if ( ng.isArray(lhs) ) {
-        return _.intersection(lhs,rhs).length !== 0;
-      } else {
-        return false;
-      }
+      var ai=0, bi=0;
+      while( ai < lhs.length && bi < rhs.length ) {
+        if ( lhs[ai] < rhs[bi] ) { 
+          ai++; } else if ( lhs[ai] > rhs[bi] ) { 
+          bi++; 
+        } else { 
+          return true; 
+        }   
+      }    
+      return false; 
     },
     "doesNotInclude": function (lhs, rhs) {
       if ( ng.isArray(lhs) ) {
@@ -268,17 +273,23 @@
 
       if (trailheads.indexOf(trailhead) === -1 &&
         (nameQuery.length > 0 || descQuery.length > 0)) {
-        trails = [];
-        trails = trails.concat( trailhead.trails.where(nameQuery).all() );
-        trails = trails.concat( trailhead.trails.where(descQuery).all() );
+        var trails = trailhead.cachedTrails().filter(function(trail) {
+          if (
+            Query.EVALUATORS.contains(trail.get('name'), params.keywords) ||
+            Query.EVALUATORS.contains(trail.get('descriptn'), params.keywords)
+            )
+            return true;
+          else
+            return false;
+        });
+
         trails = utils.unique(trails);
       } else {
-        trails = trailhead.trails.all();
+        trails = trailhead.cachedTrails();
         // trails = trailhead.trailSegments.all().map(function(trailSegment){
         //   trailSegment.trails.all();
         // });
       }
-
       if (params.filters) {
         var filteredTrails = [];
         ng.forEach(trails,function(trail){
@@ -322,7 +333,6 @@
         filteredResults.push(result);
       }
     });
-
 
     return filteredResults;
   };
@@ -564,7 +574,8 @@
       "parking": null,
       "kiosk": null,
       "restroom": null,
-      "geometry": null
+      "geometry": null,
+      "_trails": null
     },
 
     initialize: function () {
@@ -600,6 +611,14 @@
         }
       });
 
+    },
+    
+    // Since there is no direct association between trails and trailheads, 
+    // cache the association to avoid searching for mutual segment_ids every time.
+    cachedTrails: function() {
+      if (!this._trails)
+        this._trails = this.trails.all();
+      return this._trails;
     },
 
     hasWater: function () {
@@ -797,7 +816,6 @@
 
           feature.properties.geometry = feature.geometry;
           results.push( new TrailSegment(feature.properties) );
-
         });
       }
     }
