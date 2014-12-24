@@ -1,27 +1,3 @@
-
-(function(){
-
- // prepare base perf object
- if (typeof window.performance === 'undefined') {
-     window.performance = {};
- }
-
- if (!window.performance.now){
-   
-   var nowOffset = Date.now();
-
-   if (performance.timing && performance.timing.navigationStart){
-     nowOffset = performance.timing.navigationStart
-   }
-
-
-   window.performance.now = function now(){
-     return Date.now() - nowOffset;
-   }
-
- }
-
-})();
 (function (ng) {
   'use strict';
 
@@ -136,10 +112,15 @@
     },
     "intersects": function (lhs, rhs) {
       var ai=0, bi=0;
-      while( ai < lhs.length && bi < rhs.length )   {
-        if (lhs[ai] < rhs[bi] ){ ai++; }
-        else if (lhs[ai] > rhs[bi] ){ bi++; }      
-        else /* they're equal */      { return true; }   
+      while( ai < lhs.length && bi < rhs.length ) {
+        if ( lhs[ai] < rhs[bi] ) { 
+          ai++; } 
+        else if ( lhs[ai] > rhs[bi] ) { 
+          bi++; 
+        }      
+        else { 
+          return true; 
+        }   
       }    
       return false; 
     },
@@ -274,8 +255,6 @@
   }
 
   TrailSearch.perform = function (params) {
-    var s1,s2,s3,s4,s5,t0,t1;
-    s1= performance.now()
     var nameQuery = [];
     var descQuery = [];
 
@@ -290,15 +269,12 @@
 
     trailheads = trailheads.concat( TrailHead.query.where(nameQuery) );
     trailheads = trailheads.concat( TrailHead.query.where(descQuery) );
-     s2 = performance.now()
 
     var results = TrailHead.query.map(function (trailhead) {
       var trails;
-       s3 = performance.now()
 
       if (trailheads.indexOf(trailhead) === -1 &&
         (nameQuery.length > 0 || descQuery.length > 0)) {
-        t0 = performance.now()
         var trails = trailhead.fastTrails().filter(function(trail) {
           if (
             Query.EVALUATORS.contains(trail.get('name'), params.keywords) ||
@@ -308,7 +284,6 @@
           else
             return false;
         });
-        t1 = performance.now()
 
         trails = utils.unique(trails);
       } else {
@@ -317,7 +292,6 @@
         //   trailSegment.trails.all();
         // });
       }
-     s4 = performance.now()
       if (params.filters) {
         var filteredTrails = [];
         ng.forEach(trails,function(trail){
@@ -329,7 +303,6 @@
         });
         trails = filteredTrails;
       }
-     s5= performance.now()
 
       if (trails.length > 0) {
         return new SearchResult(trailhead, trails);
@@ -362,15 +335,6 @@
         filteredResults.push(result);
       }
     });
-
-    alert(
-      '1:' + (performance.now() - s1) + '\n' + 
-      '2:' + (s2 - s1) + '\n' + 
-      'm1:' + (s4 - s3) + '\n' + 
-      't1:' + (t1 - t0) + '\n' + 
-      '1:' + (s5 - s4) + '\n' +
-      '1:' + (s5 - s2) + '\n' 
-      );
 
     return filteredResults;
   };
