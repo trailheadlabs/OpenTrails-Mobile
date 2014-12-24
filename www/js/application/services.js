@@ -114,11 +114,9 @@
       var ai=0, bi=0;
       while( ai < lhs.length && bi < rhs.length ) {
         if ( lhs[ai] < rhs[bi] ) { 
-          ai++; } 
-        else if ( lhs[ai] > rhs[bi] ) { 
+          ai++; } else if ( lhs[ai] > rhs[bi] ) { 
           bi++; 
-        }      
-        else { 
+        } else { 
           return true; 
         }   
       }    
@@ -433,7 +431,6 @@
 
     defaults: {
       "id": null,
-      "idmap": null,
       "name": null,
       "segment_ids": null,
       "description": null,
@@ -539,7 +536,6 @@
 
     load: function (data,lastPage) {
       var results = this.query.collection || [];
-      var resultsMap = this.idmap || {};
 
       if (data) {
         ng.forEach(data, function (trail) {
@@ -550,9 +546,7 @@
             trail.segment_ids = trail.segment_ids.split(';')
           }
           if (trail.segment_ids.length) {
-            var trailResult = new Trail(trail);
-            results.push( trailResult );
-            //this.idmap[trail.id] = trailResult;
+            results.push( new Trail(trail) );
           }
         });
       }
@@ -709,7 +703,6 @@
 
     defaults: {
       "id": null,
-      "idmap": null,
       "name": null,
       "steward_id": null,
       "highway": null,
@@ -810,7 +803,6 @@
 
     load: function (data,lastPage) {
       var results = this.query.collection || [];
-      var resultsMap = this.idmap || {};
 
       if (data.features) {
 
@@ -821,10 +813,7 @@
           }
 
           feature.properties.geometry = feature.geometry;
-
-          var trailSegment = new TrailSegment(feature.properties);
-          results.push( trailSegment );
-          //this.idmap[feature.properties.steward_id] = trailSegment;
+          results.push( new TrailSegment(feature.properties) );
         });
       }
     }

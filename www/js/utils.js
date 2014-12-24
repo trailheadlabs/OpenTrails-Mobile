@@ -118,7 +118,7 @@
     return child;
   };
 
-  Utils.is_ios = /(iPad|iPhone|iPod)/g.test( navigator.userAgent );
+  Utils.prototype.is_ios = /(iPad|iPhone|iPod)/g.test( navigator.userAgent );
 
   window.utils = new Utils();
 
