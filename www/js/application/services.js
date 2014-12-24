@@ -273,7 +273,7 @@
 
       if (trailheads.indexOf(trailhead) === -1 &&
         (nameQuery.length > 0 || descQuery.length > 0)) {
-        var trails = trailhead.fastTrails().filter(function(trail) {
+        var trails = trailhead.cachedTrails().filter(function(trail) {
           if (
             Query.EVALUATORS.contains(trail.get('name'), params.keywords) ||
             Query.EVALUATORS.contains(trail.get('descriptn'), params.keywords)
@@ -285,7 +285,7 @@
 
         trails = utils.unique(trails);
       } else {
-        trails = trailhead.fastTrails();
+        trails = trailhead.cachedTrails();
         // trails = trailhead.trailSegments.all().map(function(trailSegment){
         //   trailSegment.trails.all();
         // });
@@ -613,7 +613,9 @@
 
     },
     
-    fastTrails: function() {
+    // Since there is no direct association between trails and trailheads, 
+    // cache the association to avoid searching for mutual segment_ids every time.
+    cachedTrails: function() {
       if (!this._trails)
         this._trails = this.trails.all();
       return this._trails;
