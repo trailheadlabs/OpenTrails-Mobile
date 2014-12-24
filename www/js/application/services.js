@@ -312,7 +312,7 @@
 
         trails = utils.unique(trails);
       } else {
-        trails = trailhead.trails.all();
+        trails = trailhead.fastTrails();
         // trails = trailhead.trailSegments.all().map(function(trailSegment){
         //   trailSegment.trails.all();
         // });
