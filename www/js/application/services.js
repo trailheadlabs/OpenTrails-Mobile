@@ -1,3 +1,27 @@
+
+(function(){
+
+ // prepare base perf object
+ if (typeof window.performance === 'undefined') {
+     window.performance = {};
+ }
+
+ if (!window.performance.now){
+   
+   var nowOffset = Date.now();
+
+   if (performance.timing && performance.timing.navigationStart){
+     nowOffset = performance.timing.navigationStart
+   }
+
+
+   window.performance.now = function now(){
+     return Date.now() - nowOffset;
+   }
+
+ }
+
+})();
 (function (ng) {
   'use strict';
 
@@ -111,11 +135,13 @@
       }
     },
     "intersects": function (lhs, rhs) {
-      if ( ng.isArray(lhs) ) {
-        return _.intersection(lhs,rhs).length !== 0;
-      } else {
-        return false;
-      }
+      var ai=0, bi=0;
+      while( ai < lhs.length && bi < rhs.length )   {
+        if (lhs[ai] < rhs[bi] ){ ai++; }
+        else if (lhs[ai] > rhs[bi] ){ bi++; }      
+        else /* they're equal */      { return true; }   
+      }    
+      return false; 
     },
     "doesNotInclude": function (lhs, rhs) {
       if ( ng.isArray(lhs) ) {
@@ -248,7 +274,8 @@
   }
 
   TrailSearch.perform = function (params) {
-    var start = new Date()
+    var s1,s2,s3,s4,s5,t0,t1;
+    s1= performance.now()
     var nameQuery = [];
     var descQuery = [];
 
@@ -263,15 +290,26 @@
 
     trailheads = trailheads.concat( TrailHead.query.where(nameQuery) );
     trailheads = trailheads.concat( TrailHead.query.where(descQuery) );
+     s2 = performance.now()
 
     var results = TrailHead.query.map(function (trailhead) {
       var trails;
+       s3 = performance.now()
 
       if (trailheads.indexOf(trailhead) === -1 &&
         (nameQuery.length > 0 || descQuery.length > 0)) {
-        trails = [];
-        trails = trails.concat( trailhead.trails.where(nameQuery).all() );
-        trails = trails.concat( trailhead.trails.where(descQuery).all() );
+        t0 = performance.now()
+        var trails = trailhead.fastTrails().filter(function(trail) {
+          if (
+            Query.EVALUATORS.contains(trail.get('name'), params.keywords) ||
+            Query.EVALUATORS.contains(trail.get('descriptn'), params.keywords)
+            )
+            return true;
+          else
+            return false;
+        });
+        t1 = performance.now()
+
         trails = utils.unique(trails);
       } else {
         trails = trailhead.trails.all();
@@ -279,7 +317,7 @@
         //   trailSegment.trails.all();
         // });
       }
-
+     s4 = performance.now()
       if (params.filters) {
         var filteredTrails = [];
         ng.forEach(trails,function(trail){
@@ -291,6 +329,7 @@
         });
         trails = filteredTrails;
       }
+     s5= performance.now()
 
       if (trails.length > 0) {
         return new SearchResult(trailhead, trails);
@@ -324,7 +363,14 @@
       }
     });
 
-    alert('end' + (new Date() - start));
+    alert(
+      '1:' + (performance.now() - s1) + '\n' + 
+      '2:' + (s2 - s1) + '\n' + 
+      'm1:' + (s4 - s3) + '\n' + 
+      't1:' + (t1 - t0) + '\n' + 
+      '1:' + (s5 - s4) + '\n' +
+      '1:' + (s5 - s2) + '\n' 
+      );
 
     return filteredResults;
   };
@@ -423,6 +469,7 @@
 
     defaults: {
       "id": null,
+      "idmap": null,
       "name": null,
       "segment_ids": null,
       "description": null,
@@ -528,6 +575,7 @@
 
     load: function (data,lastPage) {
       var results = this.query.collection || [];
+      var resultsMap = this.idmap || {};
 
       if (data) {
         ng.forEach(data, function (trail) {
@@ -538,7 +586,9 @@
             trail.segment_ids = trail.segment_ids.split(';')
           }
           if (trail.segment_ids.length) {
-            results.push( new Trail(trail) );
+            var trailResult = new Trail(trail);
+            results.push( trailResult );
+            //this.idmap[trail.id] = trailResult;
           }
         });
       }
@@ -566,7 +616,8 @@
       "parking": null,
       "kiosk": null,
       "restroom": null,
-      "geometry": null
+      "geometry": null,
+      "_trails": null
     },
 
     initialize: function () {
@@ -602,6 +653,12 @@
         }
       });
 
+    },
+    
+    fastTrails: function() {
+      if (!this._trails)
+        this._trails = this.trails.all();
+      return this._trails;
     },
 
     hasWater: function () {
@@ -688,6 +745,7 @@
 
     defaults: {
       "id": null,
+      "idmap": null,
       "name": null,
       "steward_id": null,
       "highway": null,
@@ -788,6 +846,7 @@
 
     load: function (data,lastPage) {
       var results = this.query.collection || [];
+      var resultsMap = this.idmap || {};
 
       if (data.features) {
 
@@ -798,8 +857,10 @@
           }
 
           feature.properties.geometry = feature.geometry;
-          results.push( new TrailSegment(feature.properties) );
 
+          var trailSegment = new TrailSegment(feature.properties);
+          results.push( trailSegment );
+          //this.idmap[feature.properties.steward_id] = trailSegment;
         });
       }
     }
