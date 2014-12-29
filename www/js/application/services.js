@@ -470,52 +470,82 @@
     },
 
     canFoot: function () {
-      var result = true;
-      var ts;
-      ng.forEach(this.get('segment_ids'), function (ts_id) {
-        ts = TrailSegment.query.identity_map[ts_id];
-        if ( !ts.canFoot() ) result = false;
-      });
+      var result = this._canFoot;
+      if (!result) {
+        result = true;
+        var ts;
+        ng.forEach(this.get('segment_ids'), function (ts_id) {
+          ts = TrailSegment.query.identity_map[ts_id];
+          if ( !ts.canFoot() ) {
+            result = false;
+            return result;
+          }
+        });
+      }
       return result;
     },
 
     canBicycle: function () {
-      var result = true;
-      var ts;
-      ng.forEach(this.get('segment_ids'), function (ts_id) {
-        ts = TrailSegment.query.identity_map[ts_id];
-        if ( !ts.canBicycle() ) result = false;
-      });
+      var result = this._canBicycle;
+      if (!result) {
+        result = true;
+        var ts;
+        ng.forEach(this.get('segment_ids'), function (ts_id) {
+          ts = TrailSegment.query.identity_map[ts_id];
+          if ( !ts.canBicycle() ) {
+            result = false;
+            return result;
+          }
+        });
+      }
       return result;
     },
 
     canHorse: function () {
-      var result = true;
-      var ts;
-      ng.forEach(this.get('segment_ids'), function (ts_id) {
-        ts = TrailSegment.query.identity_map[ts_id];
-        if ( !ts.canHorse() ) result = false;
-      });
+      var result = this._canHorse;
+      if (!result) {
+        result = true;
+        var ts;
+        ng.forEach(this.get('segment_ids'), function (ts_id) {
+          ts = TrailSegment.query.identity_map[ts_id];
+          if ( !ts.canHorse() ) {
+            result = false;
+            return result;
+          }
+        });
+      }
       return result;
     },
 
     canSki: function () {
-      var result = true;
-      var ts;
-      ng.forEach(this.get('segment_ids'), function (ts_id) {
-        ts = TrailSegment.query.identity_map[ts_id];
-        if ( !ts.canSki() ) result = false;
-      });
+      var result = this._canSki;
+      if (!result) {
+        result = true;
+        var ts;
+        ng.forEach(this.get('segment_ids'), function (ts_id) {
+          ts = TrailSegment.query.identity_map[ts_id];
+          if ( !ts.canSki() ) {
+            result = false;
+            return result;
+          }
+        });
+      }
       return result;
     },
 
     canWheelChair: function () {
-      var result = true;
-      var ts;
-      ng.forEach(this.get('segment_ids'), function (ts_id) {
-        ts = TrailSegment.query.identity_map[ts_id];
-        if ( !ts.canWheelChair() ) result = false;
-      });
+      var result = this._canWheelChair;
+      if (!result) {
+        result = true;
+        var ts;
+        ng.forEach(this.get('segment_ids'), function (ts_id) {
+          ts = TrailSegment.query.identity_map[ts_id];
+          if ( !ts.canWheelChair() ) {
+            result = false;
+            return result;
+          }
+        });
+      }
       return result;
     },
 
