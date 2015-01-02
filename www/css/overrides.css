@@ -1,0 +1,46 @@
+/*  since the status bar plugin isn't fully supported by Phonegap Build, we need to
+    fix the status bar styles for Android in this  platform merge file   */
+
+#status {
+  height: 0px;
+}
+
+#header {
+  top: 0px;
+}
+
+#content {
+  top: 50px;
+}
+
+#content {
+  top: 20px;
+}
+ 
+#map-view #map-container {
+  top: 0px;
+}
+
+#map-view #map-search {
+  top: 10px;
+}
+
+#map-view #map-recenter {
+  top: 10px;
+}
+
+#trail-view {
+  margin-top: 0px;
+}
+
+#notifications-view #content {
+  top: 0px;
+}
+
+#search-view #content {
+  top: 141px;
+}
+
+#search-view #content .search-results {
+  height: 100%;
+}

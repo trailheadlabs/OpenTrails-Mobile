@@ -444,12 +444,11 @@
       function selectTrailHead (th, t) {
         if (!th || ng.isUndefined(th)) return false;
         $scope.selectedTrailHead = th;
-        $scope.selectedTrails = th.trails.all();
+        $scope.selectedTrails = th.cachedTrails();
         $scope.selectedTrailHeadSteward = th.stewards.first();
         if ($scope.selectedTrails.length > 0) {
           $scope.selectedTrail = t || th.trails.first();
           $scope.selectedPhotos = $scope.selectedTrail.photos.all();
-          $scope.imagetest = ['http://critterbabies.com/wp-content/uploads/2013/11/kittens.jpg','http://www.tehcute.com/pics/201110/marshmellow-kitten-big.jpg','http://www.adiumxtras.com/images/thumbs/dango_status_icon_set_7_19047_6248_thumb.png']
         }
         else {
           // this is the case where the trailhead has no associated trails
@@ -648,6 +647,9 @@
         var viewportHeight = window.innerHeight;
         var BOTTOM_PADDING = 20;
         var calcValue = viewportHeight - (FOOTER_HEIGHT+TRAIL_NAV_HEIGHT+trailHeaderHeight+BOTTOM_PADDING);
+        //  annoying hack. Remove once phb fully supports the statusbar plugin.
+        if(!utils.is_ios)    
+            calcValue += 20;
         trailViewElm.style.webkitTransform = 'translate3d(0, '+calcValue+'px, 0)';
         trailViewElm.style.webkitTransition = '-webkit-transform 0.5s';
         trailViewElm.classList.remove('closed');
