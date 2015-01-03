@@ -6,12 +6,14 @@
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
     <meta name = "format-detection" content = "telephone=no">
     <title>To The Trails</title>
+    <link rel="stylesheet" href="js/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="js/lib/bootstrap/css/bootstrap-responsive.min.css" />   
     <link rel="stylesheet" type="text/css" href="css/lib/normalize/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/lib/mapbox/mapbox.css">
     <link rel="stylesheet" type="text/css" href="js/lib/leaflet/MarkerCluster.Default.css">
     <link rel="stylesheet" type="text/css" href="js/lib/leaflet/MarkerCluster.css">
     <link rel="stylesheet" type="text/css" href="css/lib/carousel/angular-carousel.min.css">
-    <link rel="stylesheet" type="text/css" href="css/application.css"/>
+    <link rel="stylesheet" type="text/css" href="css/application.css"/> 
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
 
     <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro|Lora:400,700|Merriweather+Sans:400,300,700,800' rel='stylesheet' type='text/css'>
@@ -48,7 +50,7 @@
       <div id="loading-view" ng-class="{fadeout:appLoaded}">
       </div>
 
-      <section id="notifications-view" ng-show="view === 'notifications-notices' || view === 'notifications-contact'" ng-controller="NotificationsCtrl" ng-cloak>
+      <section id="notifications-view" ng-show="view === 'notifications-notices' || view === 'notifications-contact' || view === 'notifications-offline'" ng-controller="NotificationsCtrl" ng-cloak>
         <div id="content">
 
           <header>
@@ -74,15 +76,53 @@
               </div>
               <nav class="notification-tabs">
                 <ul>
-                  <li ng-click="showView('notifications-notices')" class="tab" ng-class="{active:isActiveTab('notifications-notices')}">Notices</li><li ng-click="showView('notifications-contact')" class="tab" ng-class="{active:isActiveTab('notifications-contact')}">Contact</li>
+                  <li ng-click="showView('notifications-notices')" class="tab first" ng-class="{active:isActiveTab('notifications-notices')}">Notices</li>
+                  <li ng-click="showView('notifications-contact')" class="tab" ng-class="{active:isActiveTab('notifications-contact')}">Contact</li>
+                  <li ng-click="showView('notifications-offline')" class="tab last" ng-class="{active:isActiveTab('notifications-offline')}">Offline</li>
                 </ul>
-              </nav>
-            </section>
+                </nav>
+              </section>
           </header>
 
           <section id="notification-content">
 
+            <section id="offline-view" ng-show="view === 'notifications-offline'" ng-cloak>
+              <div class="contact-options" ng-show="stewardDetail.get('offline_tiles_status') === 'empty'">
+                <p class="contact-options-subhead">Download map data for offline use:</p>  
+                <div>
+                  <a class="source-btn offline" href="#" ng-click="downloadTiles('low')">Low Detail ({{ stewardDetail.get('low_size') }})</a>
+                  <a class="source-btn offline" href="#" ng-click="downloadTiles('high')">High Detail ({{ stewardDetail.get('high_size') }})</a>
+                </div>                
+              </div>
+              <div class="contact-options" ng-show="stewardDetail.get('offline_tiles_status') === 'loading'">
+                <div class="progress progress-striped active">
+                  <div id="download-bar" class="bar"></div>
+                </div>
+              </div>
+              <div class="contact-options" ng-show="stewardDetail.get('offline_tiles_status') === 'loaded'">
+                <div>
+                  <a class="source-btn offline" href="#" ng-click="showOfflineLayer()">Show on Map</a>
+                  <a class="source-btn offline" href="#" ng-click="deleteTiles()">Delete</a>
+                </div>                
+              </div>
+            </section>
             <section id="contact-view" ng-show="view === 'notifications-contact'" ng-cloak>
+              <div class="contact-options">
+                <div class="contact-options-row">
+                  <p class="contact-options-subhead">Headquarters / Main Visitor Center:</p>
+                  <p class="source-address" placeholder="123 Easy Street" ng-if="steward.get('address').length > 0">{{ steward.get('address') }}</p>
+                  <p class="source-address" placeholder="123 Easy Street" ng-if="steward.get('address').length == 0">No address available for this organization.</p>
+                  <a class="source-btn" href="#" ng-click="openInNativeMaps()">Get Directions</a>
+                </div>
+                <div class="contact-options-row">
+                  <p class="contact-options-subhead">Visitor Information Phone Number:</p>
+                  <p class="source-phone">{{ steward.get('phone') }}</p>
+                  <a class="source-btn" href="tel:{{ steward.get('phone') }}">Call</a>
+                </div>
+              </div>
+            </section>
+
+            <section id="contact-view2" ng-show="view === 'notifications-contact2'" ng-cloak>
               <div class="contact-options">
                 <div class="contact-options-row">
                   <p class="contact-options-subhead">Headquarters / Main Visitor Center:</p>
@@ -117,6 +157,7 @@
               </article>
 
             </section>
+
           </section>
         </section>
 
@@ -308,6 +349,7 @@
 
     <script type="text/javascript" src="js/lib/underscore/underscore-min.js"></script>
     <script type="text/javascript" src="js/lib/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="js/lib/bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="js/lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="js/lib/angular/angular-route.min.js"></script>

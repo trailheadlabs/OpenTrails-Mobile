@@ -779,8 +779,14 @@ body {
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
   text-align: center;
-  width: 50%;
+  width: 33%;
   cursor: pointer;
+}
+#notifications-view .notification-tabs .tab.first {
+  float: left;
+}
+#notifications-view .notification-tabs .tab.last {
+  float: right;
 }
 #notifications-view .notification-tabs .tab.active {
   color: #fff;
@@ -865,6 +871,69 @@ body {
   position: relative;
   height: 50px;
   max-width: 25%;
+}
+#notifications-view #content #offline-view {
+  padding: 10px 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+#notifications-view #content #offline-view .contact-options {
+  box-sizing: border-box;
+  border-radius: 2px;
+  text-align: left;
+  padding: 0;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 12px;
+  position: relative;
+  z-index: 2000;
+}
+#notifications-view #content #offline-view .contact-options .contact-options-row {
+  width: 100%;
+  height: auto;
+  display: inline-block;
+  margin-top: 15px;
+}
+#notifications-view #content #offline-view .contact-options .contact-options-row .contact-options-subhead {
+  width: 100%;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #a3a3a3;
+  margin: 0;
+}
+#notifications-view #content #offline-view .source-address {
+  font-size: 12px;
+  display: inline-block;
+  width: auto;
+}
+#notifications-view #content #offline-view .source-phone {
+  font-size: 12px;
+  display: inline-block;
+  width: auto;
+  text-decoration: none;
+}
+#notifications-view #content #offline-view .source-btn {
+  width: 100%;
+  height: 3em;
+  display: inline-block;
+  background-color: #4a90e2;
+  font-family: 'Merriweather Sans', sans-serif;
+  font-size: 12px;
+  color: #f6f6f6;
+  text-decoration: none;
+  line-height: 3em;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 2000;
+}
+#notifications-view #content #offline-view .source-btn.offline {
+  width: 49%;
 }
 #notifications-view #content #notification-content {
   position: absolute;

@@ -17,6 +17,8 @@
     // Center of the United States
     DEFAULT_MAP_CENTER: [ 39.8282, -98.5795 ],
     SELECTED_TRAILHEAD_ZINDEX_OFFSET: 9000,
+
+    MAX_SIMILTANEOUS_DOWNLOADS: 3,
     // Ohio
     // DEFAULT_MAP_CENTER: [ 41.082020, -81.518506 ],
     // Boulder
@@ -990,8 +992,106 @@
     defaults: {
       "id": null,
       "optimized_trail_segments_url": null,
-      "extent": null
+      "extent": null,
+      "offline_tiles": null,
+      "offline_tiles_status": null,
+      "offline_tiles_progress": null,
+      "low_size": null,
+      "high_size": null
     },
+    getBounds: function() {
+      var coor = this.get('extent').coordinates[0];
+      var southWest = L.latLng(coor[2][1], coor[2][0]), northEast = L.latLng(coor[0][1], coor[0][0]);
+      return L.latLngBounds(southWest, northEast);
+    },
+    getOfflineTemplate: function(onSuccess) {
+      var base_dir_name = 'tiles-' + this.get('id');
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
+        function(dir) {
+          var template = dir.toURL() + '{z}.{x}.{y}.png';
+          onSuccess(template);
+        },
+        function(err) {
+        }
+      );  
+    },
+    deleteTiles: function(onSuccess) {
+      var base_dir_name = 'tiles-' + this.get('id');
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
+        function(dir) {
+          dir.removeRecursively( function() {
+            onSuccess();
+          }, 
+          function() { 
+            alert("Error deleting!"); 
+          });
+        },
+        function(err) {
+        }
+      );      
+    },
+    downloadTiles: function(size, onProgress) {    
+      this.set( {offline_tiles_status: 'loading'} );
+      var urls = [];
+      var base_dir, level, tile, url, pending = 0, total, completed = 0;
+      var offline_tiles = this.get('offline_tiles');
+      var base_dir_name = 'tiles-' + this.get('id');
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
+        function(dir) {
+          dir.getDirectory(base_dir_name, {create:true, exclusive: false} ,function(dir){
+            onResolveDirectory(dir);
+          });
+        },
+        function(err) {
+        }
+      );  
+
+      function onResolveDirectory(dir) {
+        for(var i = 0; i < offline_tiles.zoom_levels.length; i++) {
+          level = offline_tiles.zoom_levels[i];
+          if (level.z >= 15 && size === 'low')
+            continue;
+          for(var j = 0; j < level.tiles.length; j++) {
+            tile = level.tiles[j];
+
+            url = offline_tiles.url_template.replace('{z}/{x}/{y}', [level.z,'/',tile[0],'/',tile[1]].join(''));
+            urls.push(url);
+          }
+        }
+        total = urls.length;
+
+          for (var i = Configuration.MAX_SIMILTANEOUS_DOWNLOADS - 1; i >= 0; i--) {
+          downloadTile(urls, dir);
+        };
+      }
+
+      function downloadTile(urls, dir) {
+        var url = urls.pop();
+        if (!url)
+          return;
+        pending++;
+        var fname = url.split('/').slice(-3).join('.');   
+        dir.getFile(fname, {create:true, exclusive: false} ,function(file){
+            var fileTransfer = new FileTransfer();
+            fileTransfer.download(url, file.toURL(), 
+                function(theFile) { 
+                      pending--;
+                      completed++;
+                      onProgress(completed * 100.0 / total);
+                      downloadTile(urls, dir);
+                },
+                function(error) { 
+                    alert("download error code: " + error.code); 
+                }
+            );    
+        },
+        function(error) { 
+          alert(" error code: " + error.code); 
+        });
+      }
+        
+    }
+
 
   }, {
 
@@ -999,13 +1099,34 @@
 
     load: function (data,lastPage) {
       var results = this.query.collection || [];
+      var low_size = 0;
+      var high_size = 0;
+      var stewardDetail = new StewardDetail(data);
+      var base_dir_name = 'tiles-' + stewardDetail.get('id');
 
-      results.push( new StewardDetail(data) );
+
+      ng.forEach(stewardDetail.get('offline_tiles').zoom_levels, function (level) {
+        if (level.z < 15) {
+          low_size += level.kilobytes;
+          high_size += level.kilobytes;
+        }
+        else
+          high_size += level.kilobytes;
+      });
+
+      stewardDetail.set( {low_size: utils.bytesToSize(low_size * 1000), high_size: utils.bytesToSize(high_size * 1000)} );
+
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
+        function(dir) {
+          stewardDetail.set( {offline_tiles_status: 'loaded'} );
+        },
+        function(err) {
+          stewardDetail.set( {offline_tiles_status: 'empty'} );
+        }
+      );      
+      results.push( stewardDetail );
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
 
     }
 
@@ -1186,6 +1307,11 @@
       return this;
     },
 
+    hasLayer: function (layer) {
+      this.delegate.hasLayer(layer.delegate);
+      return this;
+    },
+
     removeLayer: function (layer) {
       this.delegate.removeLayer(layer.delegate);
       return this;
@@ -1307,6 +1433,22 @@
   });
 
   MapTileLayer.INDEX = TILE_LAYERS;
+
+  var OfflineMapTileLayer = MapTileLayer.inherit({
+
+    defaults: {
+      url: null,
+      maxZoom: null,
+      options: {
+          "detectRetina": true
+      }
+    },
+
+    initialize: function () {
+      this.get('options').maxZoom = this.get('maxZoom');
+      this.delegate = L.tileLayer( this.get('url'), this.get('options') );
+    }
+  });
 
   var VectorLayer = MapLayer.inherit({
 
@@ -1629,6 +1771,12 @@
     }
   ]);
 
+  module.factory('OfflineMapTileLayer', [
+    function () {
+      return OfflineMapTileLayer;
+    }
+  ]);
+
   module.factory('MapTrailLayer', [
 
     function () {
@@ -1696,7 +1844,7 @@
     function ($http) {
 
       var LOADABLE = [
-        "TrailHead", "Trail", "Steward","Notification"
+        "TrailHead", "Trail", "Steward","Notification","StewardDetail"
       ];
 
       var Models = {
@@ -1738,27 +1886,36 @@
             pageUrl = url + "&page=" + page;
           }
           $http.get(pageUrl).then(
-            function (res) {
-              data = res.data;
-              if (key === "TrailData" || key === "StewardData") {
-                data = parseCSV(data);
-              }
+              function (res) {
+                data = res.data;
+                if (key === "TrailData" || key === "StewardData") {
+                  data = parseCSV(data);
+                }
 
-              if (key === "StewardData") {
-                 // we need to load the details to get the bounds
-                ng.forEach(data, function (steward) {
-                  loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
-                });
-              }
-              // window.localStorage.setItem(key, JSON.stringify(data) );
-              if(data.paging) {
+                if (key === "StewardData") {
+                   // we need to load the details to get the bounds
+                  ng.forEach(data, function (steward) {
+                    loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
+                    if (StewardDetail.pending)
+                      StewardDetail.pending++;
+                    else
+                      StewardDetail.pending = 1;
+                  });
+                }
+                if (key === "StewardDetail") {
+                   StewardDetail.pending--;
+                   if (StewardDetail.pending === 0)
+                    StewardDetail.loaded = true;
+                }
+                // window.localStorage.setItem(key, JSON.stringify(data) );
+                if(data.paging) {
 
-                if(!data.paging.last_page) {
-                  model.load(data.data,false);
-                  var nextPage = data.paging.current_page+1;
-                  loadModel(model,key,url,nextPage);
-                } else {
-                  model.load(data.data,true);
+                  if(!data.paging.last_page) {
+                    model.load(data.data,false);
+                    var nextPage = data.paging.current_page+1;
+                    loadModel(model,key,url,nextPage);
+                  } else {
+                    model.load(data.data,true);
                 }
               } else {
                 model.load(data,true);
