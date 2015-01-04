@@ -35,7 +35,6 @@
     SATELLITE_MAP_TILE_ENDPOINT: "trailheadlabs.jih1cig0",
     TRAILSEGMENT_MAP_TILE_ENDPOINT: "trailheadlabs.ad9272f9",
     MAPBOX_ACCESS_TOKEN: "pk.eyJ1IjoidHJhaWxoZWFkbGFicyIsImEiOiJnNDFLZ1Q4In0.t7YwoIwtzS_ghFsx8gU62A",
-   // TRAILSEGMENT_MAP_TILE_ENDPOINT: "http://ec2-54-67-81-150.us-west-1.compute.amazonaws.com/roads/{z}/{x}/{y}.png",
     ATTRIBUTION: "<a href='https://www.mapbox.com/about/maps/' target='_system'>Maps &copy; Mapbox &copy; OpenStreetMap</a>"
   };
 
@@ -577,7 +576,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
       var identity_map = this.query.identity_map || {};
       if (data) {
@@ -601,9 +600,7 @@
         });
       }
       this.query.setCollection(results);
-      if(lastPage) {
-        this.loaded = true;
-      }
+      this.loaded = true;
     }
 
   });
@@ -728,7 +725,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.features) {
@@ -744,10 +741,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
 
   });
@@ -858,7 +852,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
       var identity_map = this.query.identity_map || {};
 
@@ -909,7 +903,7 @@
   {
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.length) {
@@ -919,10 +913,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
   });
 
@@ -966,7 +957,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.length) {
@@ -979,10 +970,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
 
   });
@@ -1036,15 +1024,15 @@
       var base_dir, level, tile, url, pending = 0, total, completed = 0;
       var offline_tiles = this.get('offline_tiles');
       var base_dir_name = 'tiles-' + this.get('id');
-      window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
-        function(dir) {
-          dir.getDirectory(base_dir_name, {create:true, exclusive: false} ,function(dir){
-            onResolveDirectory(dir);
-          });
-        },
-        function(err) {
-        }
-      );  
+        window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
+          function(dir) {
+            dir.getDirectory(base_dir_name, {create:true, exclusive: false} ,function(dir){
+              onResolveDirectory(dir);
+            });
+          },
+          function(err) {
+          }
+        );  
 
       function onResolveDirectory(dir) {
         for(var i = 0; i < offline_tiles.zoom_levels.length; i++) {
@@ -1097,7 +1085,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
       var low_size = 0;
       var high_size = 0;
@@ -1193,7 +1181,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.length) {
@@ -1204,10 +1192,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
 
   });
@@ -1482,6 +1467,10 @@
 
     setOrganizations: function (organizations) {
       this.delegate.setOrganizations(organizations);
+    },
+
+    setGeoJsonProvider: function (provider) {
+      this.delegate.setGeoJsonProvider(provider);
     },
 
   });
@@ -1852,10 +1841,12 @@
         "Trail": Trail,
         "TrailSegment": TrailSegment,
         "Steward": Steward,
-        "StewardDetail": StewardDetail,
-        "Notification": Notification,
-        "Photo": Photo
-      };
+          "StewardDetail": StewardDetail,
+          "Notification": Notification,
+          "Photo": Photo
+        };
+
+      var data_dir;
 
       Models.loaded = function () {
         var loaded = true;
@@ -1871,71 +1862,96 @@
         return loaded;
       };
 
-      TrailSegment.loadGeoJSON = function (success) {
-        $http.get(Configuration.TRAILSEGMENT_DATA_ENDPOINT).success(success);
-      };
+      Models.loadModel = function (model, key, url, callback) {
+        var network = window.navigator.onLine;
+        if (network) { 
+          $http.get(url).then(
+            function (res) {
+              var fname = url.split('://')[1].split('/').join('.');
+              data_dir.getFile(fname, {create: true, exclusive: false}, function (file) {
+                file.createWriter(function (writer) {
+                  writer.onwriteend = function (evt) {
+                  };
+                  if (fname.substring(fname.length - 3, fname.length) === 'csv')
+                    writer.write(res.data); 
+                  else
+                    writer.write(JSON.stringify(res.data));
+                }, function (err) {alert(err)});
+              }, function (err) {alert(err)});
 
-      function loadModel (model, key, url, page) {
-        // var data = window.localStorage.getItem(key);
-        var data = false;
-        if (data) {
-          model.load( JSON.parse(data) );
-        } else {
-          var pageUrl = url;
-          if(page){
-            pageUrl = url + "&page=" + page;
-          }
-          $http.get(pageUrl).then(
-              function (res) {
-                data = res.data;
-                if (key === "TrailData" || key === "StewardData") {
-                  data = parseCSV(data);
-                }
+              process(res, model, key, callback);
 
-                if (key === "StewardData") {
-                   // we need to load the details to get the bounds
-                  ng.forEach(data, function (steward) {
-                    loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
-                    if (StewardDetail.pending)
-                      StewardDetail.pending++;
-                    else
-                      StewardDetail.pending = 1;
-                  });
-                }
-                if (key === "StewardDetail") {
-                   StewardDetail.pending--;
-                   if (StewardDetail.pending === 0)
-                    StewardDetail.loaded = true;
-                }
-                // window.localStorage.setItem(key, JSON.stringify(data) );
-                if(data.paging) {
-
-                  if(!data.paging.last_page) {
-                    model.load(data.data,false);
-                    var nextPage = data.paging.current_page+1;
-                    loadModel(model,key,url,nextPage);
-                  } else {
-                    model.load(data.data,true);
-                }
-              } else {
-                model.load(data,true);
-              }
             }
           );
         }
+        else {
+          var fname = url.split('://')[1].split('/').join('.');
+          data_dir.getFile(fname, {exclusive: false}, function (fileEntry) {
+            $http.get(fileEntry.toURL()).then(
+              function (res) {
+                process(res, model, key, callback);
+              }
+            );
+          }, function (err) {});          
+        }
+      }
+
+      function process (res, model, key, callback) {
+        var data = res.data;
+        if (key === "GeoJson") {
+          callback(data);
+          return;
+        }
+
+        if (key === "TrailData" || key === "StewardData") {
+          data = parseCSV(data);
+        }
+
+        if (key === "StewardData") {
+           // we need to load the details to get the bounds
+          ng.forEach(data, function (steward) {
+            Models.loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
+            if (StewardDetail.pending)
+              StewardDetail.pending++;
+            else
+              StewardDetail.pending = 1;
+          });
+        }
+        if (key === "StewardDetail") {
+           StewardDetail.pending--;
+           if (StewardDetail.pending === 0)
+            StewardDetail.loaded = true;
+        }
+        model.load(data,true);
       }
 
       function parseCSV(data){
         return Papa.parse(data,{header:true}).data;
       }
 
-      loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
-      loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
-      //  don't load segment models here since they are loaded as the geoJSON is applied
-      loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
-      loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
-      loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
-      loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);
+      function loadModels () {
+        Models.loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
+        Models.loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
+        Models.loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
+        Models.loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
+        Models.loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
+        Models.loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);
+      }
+
+      if (window.resolveLocalFileSystemURL) { 
+        window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
+          function(dir) {
+            dir.getDirectory('data', {create:true, exclusive: false} ,function(dir){
+              data_dir = dir;
+              loadModels();
+            });
+          },
+          function(err) {
+          }
+        );  
+      }
+      else
+        loadModels();
 
       window.Trail = Trail;
       window.Photo = Photo;

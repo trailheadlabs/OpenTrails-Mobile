@@ -411,6 +411,7 @@
 
           var vectorLayer = new VectorLayer();
           vectorLayer.setOrganizations(Models.StewardDetail.query.collection);
+          vectorLayer.setGeoJsonProvider(Models.loadModel);
           vectorLayer.setMap(Map);
 
 
