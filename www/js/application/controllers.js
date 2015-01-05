@@ -101,6 +101,8 @@
       $scope.downloadTiles = function (size) {
         var bar = document.getElementById('download-bar');
         bar.style.width = '0%';
+        // force caching of trailsegments
+        Models.loadModel(null, 'GeoJson', $scope.stewardDetail.get('optimized_trail_segments_url'), function(data){});
         $scope.stewardDetail.downloadTiles(size, function (progress) {
           if (progress === 100)
             $scope.$apply(function () { $scope.stewardDetail.set( {offline_tiles_status: 'loaded'} )});
