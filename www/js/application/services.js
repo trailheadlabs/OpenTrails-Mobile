@@ -992,12 +992,19 @@
       var southWest = L.latLng(coor[2][1], coor[2][0]), northEast = L.latLng(coor[0][1], coor[0][0]);
       return L.latLngBounds(southWest, northEast);
     },
-    getOfflineTemplate: function(onSuccess) {
+    getOfflineTileJson: function(onSuccess) {
       var base_dir_name = 'tiles-' + this.get('id');
       window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
         function(dir) {
-          var template = dir.toURL() + '{z}.{x}.{y}.png';
-          onSuccess(template);
+          dir.getFile('layer.json', {exclusive: false}, function (fileEntry) {
+            fileEntry.file(function(file) {
+              var reader = new FileReader();
+              reader.onloadend = function(e) {
+                onSuccess(JSON.parse(this.result));
+              }
+              reader.readAsText(file);
+            });
+          }, function (err) {alert(err)});
         },
         function(err) {
         }
@@ -1024,19 +1031,23 @@
       var base_dir, level, tile, url, pending = 0, total, completed = 0;
       var offline_tiles = this.get('offline_tiles');
       var base_dir_name = 'tiles-' + this.get('id');
-        window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
-          function(dir) {
-            dir.getDirectory(base_dir_name, {create:true, exclusive: false} ,function(dir){
-              onResolveDirectory(dir);
-            });
-          },
-          function(err) {
-          }
-        );  
+      var template = L.Browser.retina ? offline_tiles.url_template.replace('{y}', '{y}@2x') : offline_tiles.url_template;
+
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
+        function(dir) {
+          dir.getDirectory(base_dir_name, {create:true, exclusive: false} ,function(dir){
+            onResolveDirectory(dir);
+          });
+        },
+        function(err) {
+        }
+      );  
 
       function onResolveDirectory(dir) {
+        var max_zoom = 0;
         for(var i = 0; i < offline_tiles.zoom_levels.length; i++) {
           level = offline_tiles.zoom_levels[i];
+          max_zoom = level.z > max_zoom ? level.z : max_zoom;
           if (level.z >= 15 && size === 'low')
             continue;
           for(var j = 0; j < level.tiles.length; j++) {
@@ -1048,7 +1059,23 @@
         }
         total = urls.length;
 
-          for (var i = Configuration.MAX_SIMILTANEOUS_DOWNLOADS - 1; i >= 0; i--) {
+        var tileJSON = {
+          "tilejson": "2.0.0",
+          "scheme": "xyz",
+          "tiles": [
+                dir.toURL() + '{z}.{x}.{y}.png'
+          ],
+          "maxzoom": 14
+        }
+        dir.getFile('layer.json', {create: true, exclusive: false}, function (file) {
+          file.createWriter(function (writer) {
+            writer.onwriteend = function (evt) {
+            };
+            writer.write(JSON.stringify(tileJSON));
+          }, function (err) {alert(err)});
+        }, function (err) {alert(err)});
+
+        for (var i = Configuration.MAX_SIMILTANEOUS_DOWNLOADS - 1; i >= 0; i--) {
           downloadTile(urls, dir);
         };
       }
@@ -1091,15 +1118,16 @@
       var high_size = 0;
       var stewardDetail = new StewardDetail(data);
       var base_dir_name = 'tiles-' + stewardDetail.get('id');
-
+      var size_key = L.Browser.retina ? 'retina_kilobytes' : 'kilobytes';
 
       ng.forEach(stewardDetail.get('offline_tiles').zoom_levels, function (level) {
+        var size = level[size_key];
         if (level.z < 15) {
-          low_size += level.kilobytes;
-          high_size += level.kilobytes;
+          low_size += size;
+          high_size += size;
         }
         else
-          high_size += level.kilobytes;
+          high_size += size;
       });
 
       stewardDetail.set( {low_size: utils.bytesToSize(low_size * 1000), high_size: utils.bytesToSize(high_size * 1000)} );
@@ -1422,16 +1450,18 @@
   var OfflineMapTileLayer = MapTileLayer.inherit({
 
     defaults: {
-      url: null,
-      maxZoom: null,
+      tileJson: null,
       options: {
           "detectRetina": true
       }
     },
 
     initialize: function () {
-      this.get('options').maxZoom = this.get('maxZoom');
-      this.delegate = L.tileLayer( this.get('url'), this.get('options') );
+      var options = this.get('options');
+      var tileJson = this.get('tileJson');
+      options.maxNativeZoom = tileJson.maxzoom;
+      options.minZoom = 0;
+      this.delegate = L.tileLayer( tileJson.tiles[0], options );
     }
   });
 

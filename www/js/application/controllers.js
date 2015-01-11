@@ -93,8 +93,8 @@
       };
 
       $scope.showOfflineLayer = function () {
-        $scope.stewardDetail.getOfflineTemplate(function (template) {
-          $scope.$emit('showOffline', template, 15, $scope.stewardDetail.getBounds());
+        $scope.stewardDetail.getOfflineTileJson(function (tileJson) {
+          $scope.$emit('showOffline', tileJson, $scope.stewardDetail.getBounds());
         });
       }
 
@@ -701,7 +701,7 @@
 
       $scope.distance = distance;
 
-      $scope.$on('showOffline', function (e, template, maxZoom, bounds) { 
+      $scope.$on('showOffline', function (e, tileJson, bounds) { 
         Map.removeLayer(baseLayers[currentLayerIndex]);
 
         for (var i = 0; i < baseLayers.length; i++) {
@@ -709,7 +709,7 @@
               baseLayers.splice(i, 1);            
           }
         };
-        var layer = new OfflineMapTileLayer({url: template, maxZoom: maxZoom}); 
+        var layer = new OfflineMapTileLayer({tileJson: tileJson}); 
         Map.addLayer(layer);
         baseLayers.push(layer);
         Map.fitBounds(bounds);
