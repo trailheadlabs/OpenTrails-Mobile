@@ -38,6 +38,10 @@ lvector.Outerspatial = lvector.GeoJSONLayer.extend({
         this._organizations = organizations;
     },
 
+    setGeoJsonProvider: function(provider) {
+        this._geoJsonProvider = provider;
+    },
+
     _requiredParams: ["url"],
 
     _getFeatures: function() {
@@ -45,13 +49,11 @@ lvector.Outerspatial = lvector.GeoJSONLayer.extend({
             var bounds = this.options.map.getBounds();
             for (var i = this._organizations.length - 1; i >= 0; i--) {
                 var org = this._organizations[i];
-                var coor = org.get('extent').coordinates[0];
-                var southWest = L.latLng(coor[2][1], coor[2][0]), northEast = L.latLng(coor[0][1], coor[0][0]),
-                    orgBounds = L.latLngBounds(southWest, northEast);
+                var orgBounds = org.getBounds();
                 if (!_.contains(this._rendered_organizations,org) && (bounds.contains(orgBounds) || bounds.intersects(orgBounds))) {
                     this._rendered_organizations.push(org);
                     self = this;
-                    $.getJSON(org.get('optimized_trail_segments_url'),function(data){
+                    this._geoJsonProvider(null, 'GeoJson', org.get('optimized_trail_segments_url'), function(data){
                         var dataLayer = L.geoJson(data, {
                             onEachFeature: function(feature, layer) {
                                 layer.setStyle({
@@ -62,7 +64,6 @@ lvector.Outerspatial = lvector.GeoJSONLayer.extend({
                             }
                         }).addTo(self.options.map);
                     });
-                    // layer = L.mapbox.featureLayer().loadURL(org.get('optimized_trail_segments_url')).addTo(this.options.map);
                 }
             };
         }

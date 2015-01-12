@@ -17,6 +17,8 @@
     // Center of the United States
     DEFAULT_MAP_CENTER: [ 39.8282, -98.5795 ],
     SELECTED_TRAILHEAD_ZINDEX_OFFSET: 9000,
+
+    MAX_SIMILTANEOUS_DOWNLOADS: 3,
     // Ohio
     // DEFAULT_MAP_CENTER: [ 41.082020, -81.518506 ],
     // Boulder
@@ -33,7 +35,6 @@
     SATELLITE_MAP_TILE_ENDPOINT: "trailheadlabs.jih1cig0",
     TRAILSEGMENT_MAP_TILE_ENDPOINT: "trailheadlabs.ad9272f9",
     MAPBOX_ACCESS_TOKEN: "pk.eyJ1IjoidHJhaWxoZWFkbGFicyIsImEiOiJnNDFLZ1Q4In0.t7YwoIwtzS_ghFsx8gU62A",
-   // TRAILSEGMENT_MAP_TILE_ENDPOINT: "http://ec2-54-67-81-150.us-west-1.compute.amazonaws.com/roads/{z}/{x}/{y}.png",
     ATTRIBUTION: "<a href='https://www.mapbox.com/about/maps/' target='_system'>Maps &copy; Mapbox &copy; OpenStreetMap</a>"
   };
 
@@ -575,7 +576,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
       var identity_map = this.query.identity_map || {};
       if (data) {
@@ -599,9 +600,7 @@
         });
       }
       this.query.setCollection(results);
-      if(lastPage) {
-        this.loaded = true;
-      }
+      this.loaded = true;
     }
 
   });
@@ -726,7 +725,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.features) {
@@ -742,10 +741,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
 
   });
@@ -856,7 +852,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
       var identity_map = this.query.identity_map || {};
 
@@ -907,7 +903,7 @@
   {
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.length) {
@@ -917,10 +913,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
   });
 
@@ -964,7 +957,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.length) {
@@ -977,10 +970,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
 
   });
@@ -990,22 +980,169 @@
     defaults: {
       "id": null,
       "optimized_trail_segments_url": null,
-      "extent": null
+      "extent": null,
+      "offline_tiles": null,
+      "offline_tiles_status": null,
+      "offline_tiles_progress": null,
+      "low_size": null,
+      "high_size": null
     },
+    getBounds: function() {
+      var coor = this.get('extent').coordinates[0];
+      var southWest = L.latLng(coor[2][1], coor[2][0]), northEast = L.latLng(coor[0][1], coor[0][0]);
+      return L.latLngBounds(southWest, northEast);
+    },
+    getOfflineTileJson: function(onSuccess) {
+      var base_dir_name = 'tiles-' + this.get('id');
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
+        function(dir) {
+          dir.getFile('layer.json', {exclusive: false}, function (fileEntry) {
+            fileEntry.file(function(file) {
+              var reader = new FileReader();
+              reader.onloadend = function(e) {
+                onSuccess(JSON.parse(this.result));
+              }
+              reader.readAsText(file);
+            });
+          }, function (err) {alert(err)});
+        },
+        function(err) {
+        }
+      );  
+    },
+    deleteTiles: function(onSuccess) {
+      var base_dir_name = 'tiles-' + this.get('id');
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
+        function(dir) {
+          dir.removeRecursively( function() {
+            onSuccess();
+          }, 
+          function() { 
+            alert("Error deleting!"); 
+          });
+        },
+        function(err) {
+        }
+      );      
+    },
+    downloadTiles: function(size, onProgress) {    
+      this.set( {offline_tiles_status: 'loading'} );
+      var urls = [];
+      var base_dir, level, tile, url, pending = 0, total, completed = 0;
+      var offline_tiles = this.get('offline_tiles');
+      var base_dir_name = 'tiles-' + this.get('id');
+      var template = L.Browser.retina ? offline_tiles.url_template.replace('{y}', '{y}@2x') : offline_tiles.url_template;
+
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
+        function(dir) {
+          dir.getDirectory(base_dir_name, {create:true, exclusive: false} ,function(dir){
+            onResolveDirectory(dir);
+          });
+        },
+        function(err) {
+        }
+      );  
+
+      function onResolveDirectory(dir) {
+        var max_zoom = 0;
+        for(var i = 0; i < offline_tiles.zoom_levels.length; i++) {
+          level = offline_tiles.zoom_levels[i];
+          max_zoom = level.z > max_zoom ? level.z : max_zoom;
+          if (level.z >= 15 && size === 'low')
+            continue;
+          for(var j = 0; j < level.tiles.length; j++) {
+            tile = level.tiles[j];
+
+            url = offline_tiles.url_template.replace('{z}/{x}/{y}', [level.z,'/',tile[0],'/',tile[1]].join(''));
+            urls.push(url);
+          }
+        }
+        total = urls.length;
+
+        var tileJSON = {
+          "tilejson": "2.0.0",
+          "scheme": "xyz",
+          "tiles": [
+                dir.toURL() + '{z}.{x}.{y}.png'
+          ],
+          "maxzoom": 14
+        }
+        dir.getFile('layer.json', {create: true, exclusive: false}, function (file) {
+          file.createWriter(function (writer) {
+            writer.onwriteend = function (evt) {
+            };
+            writer.write(JSON.stringify(tileJSON));
+          }, function (err) {alert(err)});
+        }, function (err) {alert(err)});
+
+        for (var i = Configuration.MAX_SIMILTANEOUS_DOWNLOADS - 1; i >= 0; i--) {
+          downloadTile(urls, dir);
+        };
+      }
+
+      function downloadTile(urls, dir) {
+        var url = urls.pop();
+        if (!url)
+          return;
+        pending++;
+        var fname = url.split('/').slice(-3).join('.');   
+        dir.getFile(fname, {create:true, exclusive: false} ,function(file){
+            var fileTransfer = new FileTransfer();
+            fileTransfer.download(url, file.toURL(), 
+                function(theFile) { 
+                      pending--;
+                      completed++;
+                      onProgress(completed * 100.0 / total);
+                      downloadTile(urls, dir);
+                },
+                function(error) { 
+                    alert("download error code: " + error.code); 
+                }
+            );    
+        },
+        function(error) { 
+          alert(" error code: " + error.code); 
+        });
+      }
+        
+    }
+
 
   }, {
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
+      var low_size = 0;
+      var high_size = 0;
+      var stewardDetail = new StewardDetail(data);
+      var base_dir_name = 'tiles-' + stewardDetail.get('id');
+      var size_key = L.Browser.retina ? 'retina_kilobytes' : 'kilobytes';
 
-      results.push( new StewardDetail(data) );
+      ng.forEach(stewardDetail.get('offline_tiles').zoom_levels, function (level) {
+        var size = level[size_key];
+        if (level.z < 15) {
+          low_size += size;
+          high_size += size;
+        }
+        else
+          high_size += size;
+      });
+
+      stewardDetail.set( {low_size: utils.bytesToSize(low_size * 1000), high_size: utils.bytesToSize(high_size * 1000)} );
+
+      window.resolveLocalFileSystemURL(cordova.file.dataDirectory + base_dir_name,
+        function(dir) {
+          stewardDetail.set( {offline_tiles_status: 'loaded'} );
+        },
+        function(err) {
+          stewardDetail.set( {offline_tiles_status: 'empty'} );
+        }
+      );      
+      results.push( stewardDetail );
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
 
     }
 
@@ -1072,7 +1209,7 @@
 
     query: new Query(),
 
-    load: function (data,lastPage) {
+    load: function (data) {
       var results = this.query.collection || [];
 
       if (data.length) {
@@ -1083,10 +1220,7 @@
       }
 
       this.query.setCollection(results);
-      if(lastPage){
-        this.loaded = true;
-      }
-
+      this.loaded = true;
     }
 
   });
@@ -1183,6 +1317,11 @@
 
     addLayer: function (layer) {
       this.delegate.addLayer(layer.delegate);
+      return this;
+    },
+
+    hasLayer: function (layer) {
+      this.delegate.hasLayer(layer.delegate);
       return this;
     },
 
@@ -1308,6 +1447,24 @@
 
   MapTileLayer.INDEX = TILE_LAYERS;
 
+  var OfflineMapTileLayer = MapTileLayer.inherit({
+
+    defaults: {
+      tileJson: null,
+      options: {
+          "detectRetina": true
+      }
+    },
+
+    initialize: function () {
+      var options = this.get('options');
+      var tileJson = this.get('tileJson');
+      options.maxNativeZoom = tileJson.maxzoom;
+      options.minZoom = 0;
+      this.delegate = L.tileLayer( tileJson.tiles[0], options );
+    }
+  });
+
   var VectorLayer = MapLayer.inherit({
 
      defaults: {
@@ -1340,6 +1497,10 @@
 
     setOrganizations: function (organizations) {
       this.delegate.setOrganizations(organizations);
+    },
+
+    setGeoJsonProvider: function (provider) {
+      this.delegate.setGeoJsonProvider(provider);
     },
 
   });
@@ -1629,6 +1790,12 @@
     }
   ]);
 
+  module.factory('OfflineMapTileLayer', [
+    function () {
+      return OfflineMapTileLayer;
+    }
+  ]);
+
   module.factory('MapTrailLayer', [
 
     function () {
@@ -1696,7 +1863,7 @@
     function ($http) {
 
       var LOADABLE = [
-        "TrailHead", "Trail", "Steward","Notification"
+        "TrailHead", "Trail", "Steward","Notification","StewardDetail"
       ];
 
       var Models = {
@@ -1704,10 +1871,12 @@
         "Trail": Trail,
         "TrailSegment": TrailSegment,
         "Steward": Steward,
-        "StewardDetail": StewardDetail,
-        "Notification": Notification,
-        "Photo": Photo
-      };
+          "StewardDetail": StewardDetail,
+          "Notification": Notification,
+          "Photo": Photo
+        };
+
+      var data_dir;
 
       Models.loaded = function () {
         var loaded = true;
@@ -1723,62 +1892,96 @@
         return loaded;
       };
 
-      TrailSegment.loadGeoJSON = function (success) {
-        $http.get(Configuration.TRAILSEGMENT_DATA_ENDPOINT).success(success);
-      };
-
-      function loadModel (model, key, url, page) {
-        // var data = window.localStorage.getItem(key);
-        var data = false;
-        if (data) {
-          model.load( JSON.parse(data) );
-        } else {
-          var pageUrl = url;
-          if(page){
-            pageUrl = url + "&page=" + page;
-          }
-          $http.get(pageUrl).then(
+      Models.loadModel = function (model, key, url, callback) {
+        var network = window.navigator.onLine;
+        if (network) { 
+          $http.get(url).then(
             function (res) {
-              data = res.data;
-              if (key === "TrailData" || key === "StewardData") {
-                data = parseCSV(data);
-              }
+              var fname = url.split('://')[1].split('/').join('.');
+              data_dir.getFile(fname, {create: true, exclusive: false}, function (file) {
+                file.createWriter(function (writer) {
+                  writer.onwriteend = function (evt) {
+                  };
+                  if (fname.substring(fname.length - 3, fname.length) === 'csv')
+                    writer.write(res.data); 
+                  else
+                    writer.write(JSON.stringify(res.data));
+                }, function (err) {alert(err)});
+              }, function (err) {alert(err)});
 
-              if (key === "StewardData") {
-                 // we need to load the details to get the bounds
-                ng.forEach(data, function (steward) {
-                  loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
-                });
-              }
-              // window.localStorage.setItem(key, JSON.stringify(data) );
-              if(data.paging) {
+              process(res, model, key, callback);
 
-                if(!data.paging.last_page) {
-                  model.load(data.data,false);
-                  var nextPage = data.paging.current_page+1;
-                  loadModel(model,key,url,nextPage);
-                } else {
-                  model.load(data.data,true);
-                }
-              } else {
-                model.load(data,true);
-              }
             }
           );
         }
+        else {
+          var fname = url.split('://')[1].split('/').join('.');
+          data_dir.getFile(fname, {exclusive: false}, function (fileEntry) {
+            $http.get(fileEntry.toURL()).then(
+              function (res) {
+                process(res, model, key, callback);
+              }
+            );
+          }, function (err) {});          
+        }
+      }
+
+      function process (res, model, key, callback) {
+        var data = res.data;
+        if (key === "GeoJson") {
+          callback(data);
+          return;
+        }
+
+        if (key === "TrailData" || key === "StewardData") {
+          data = parseCSV(data);
+        }
+
+        if (key === "StewardData") {
+           // we need to load the details to get the bounds
+          ng.forEach(data, function (steward) {
+            Models.loadModel(StewardDetail, "StewardDetail", Configuration.STEWARD_DETAIL_ENDPOINT + '/' + steward.outerspatial_id);
+            if (StewardDetail.pending)
+              StewardDetail.pending++;
+            else
+              StewardDetail.pending = 1;
+          });
+        }
+        if (key === "StewardDetail") {
+           StewardDetail.pending--;
+           if (StewardDetail.pending === 0)
+            StewardDetail.loaded = true;
+        }
+        model.load(data,true);
       }
 
       function parseCSV(data){
         return Papa.parse(data,{header:true}).data;
       }
 
-      loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
-      loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
-      //  don't load segment models here since they are loaded as the geoJSON is applied
-      loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
-      loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
-      loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
-      loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);
+      function loadModels () {
+        Models.loadModel(Trail, "TrailData", Configuration.TRAIL_DATA_ENDPOINT);
+        Models.loadModel(TrailHead, "TrailHeadData", Configuration.TRAILHEAD_DATA_ENDPOINT);
+        Models.loadModel(TrailSegment, "TrailSegmentData", Configuration.TRAILSEGMENT_DATA_ENDPOINT);
+        Models.loadModel(Steward, "StewardData", Configuration.STEWARD_DATA_ENDPOINT);
+        Models.loadModel(Notification, "NotificationData", Configuration.NOTIFICATION_DATA_ENDPOINT);
+        Models.loadModel(Photo, "PhotoData", Configuration.PHOTO_DATA_ENDPOINT);
+      }
+
+      if (window.resolveLocalFileSystemURL) { 
+        window.resolveLocalFileSystemURL(cordova.file.dataDirectory,
+          function(dir) {
+            dir.getDirectory('data', {create:true, exclusive: false} ,function(dir){
+              data_dir = dir;
+              loadModels();
+            });
+          },
+          function(err) {
+          }
+        );  
+      }
+      else
+        loadModels();
 
       window.Trail = Trail;
       window.Photo = Photo;

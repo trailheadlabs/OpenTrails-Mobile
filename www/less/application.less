@@ -902,9 +902,19 @@ body {
       box-sizing: border-box;
       -webkit-box-sizing: border-box;
       text-align: center;
-      width: 50%;
+      width: 33%;
       //color: lighten(@green-color,50%);
       cursor: pointer;
+    }
+
+    .tab.first
+    {
+      float: left;
+    }
+
+    .tab.last
+    {
+      float: right;
     }
 
     .tab.active
@@ -995,6 +1005,72 @@ body {
         max-width: 25%;
       }
     }
+    #offline-view {
+      padding: 10px 20px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      .contact-options {
+        box-sizing: border-box;
+        border-radius: 2px;
+        text-align: left;
+        padding: 0;
+        width: 100%;
+        margin-bottom: 10px;
+        font-size: @small-font;
+        position: relative;
+        z-index: @z-index-2;
+
+        .contact-options-row {
+          width: 100%;
+          height: auto;
+          display: inline-block;
+          margin-top: 15px;
+
+          .contact-options-subhead {
+            width: 100%;
+            font-family: @font-context;
+            font-size: 14px;
+            font-weight: 400;
+            color: @light-gray-color;
+            margin: 0;
+          }tt
+        }
+      }
+      .source-address {
+        font-size: @small-font;
+        display: inline-block;
+        width: auto;
+      }
+      .source-phone {
+        font-size: @small-font;
+        display: inline-block;
+        width: auto;
+        text-decoration: none;
+      }
+      .source-btn {
+        width: 100%;
+        height: 3em;
+        display: inline-block;
+        background-color: @blue-color;
+        font-family: @font-display;
+        font-size: @small-font;
+        color: @white-color;
+        text-decoration: none;
+        line-height: 3em;
+        text-align: center;
+        vertical-align: middle;
+        border-radius: 2px;
+        cursor: pointer;
+        z-index: @z-index-2;
+      }
+      .source-btn.offline {
+        width: 49%;
+      }
+    }
     #notification-content
     {
       position: absolute;
@@ -1065,9 +1141,9 @@ body {
         cursor: pointer;
         z-index: @z-index-2;
       }
-    }
+    } 
     #notification-list {
-      padding: 0 20px;
+      padding: 0 20px;  
       position: absolute;
       left: 0;
       right: 0;

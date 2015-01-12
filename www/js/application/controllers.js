@@ -22,6 +22,8 @@
           navigator.splashscreen.hide();
           $scope.stewards = Models.Steward.query.all();
           $scope.steward  = $scope.stewards[index];
+          $scope.stewardDetail = Models.StewardDetail.query.where({ key: 'id', evaluator: 'equals', value: parseInt($scope.steward.get('id')) }).first();
+
           unwatchLoaded();
         }
 
@@ -33,6 +35,8 @@
         if ( index >= $scope.stewards.length-1 )
           index = -1;
         $scope.steward = $scope.stewards[++index];
+        $scope.stewardDetail = Models.StewardDetail.query.where({ key: 'id', evaluator: 'equals', value: parseInt($scope.steward.get('id')) }).first();
+
       };
 
       // Navigate to previous steward
@@ -41,6 +45,7 @@
         if ( index <= 0 )
           index = $scope.stewards.length;
         $scope.steward = $scope.stewards[--index];
+        $scope.stewardDetail = Models.StewardDetail.query.where({ key: 'id', evaluator: 'equals', value: parseInt($scope.steward.get('id')) }).first();
       };
 
       function currentStewardPosition() {
@@ -87,6 +92,33 @@
         return numUndeleted;
       };
 
+      $scope.showOfflineLayer = function () {
+        $scope.stewardDetail.getOfflineTileJson(function (tileJson) {
+          $scope.$emit('showOffline', tileJson, $scope.stewardDetail.getBounds());
+        });
+      }
+
+      $scope.downloadTiles = function (size) {
+        var bar = document.getElementById('download-bar');
+        bar.style.width = '0%';
+        // force caching of trailsegments
+        Models.loadModel(null, 'GeoJson', $scope.stewardDetail.get('optimized_trail_segments_url'), function(data){});
+        $scope.stewardDetail.downloadTiles(size, function (progress) {
+          if (progress === 100)
+            $scope.$apply(function () { $scope.stewardDetail.set( {offline_tiles_status: 'loaded'} )});
+          else
+            bar.style.width = progress + '%';
+        });
+      }
+
+      $scope.deleteTiles = function () {
+        $scope.stewardDetail.deleteTiles(function (success) {
+          $scope.$apply(function () {
+            $scope.stewardDetail.set( {offline_tiles_status: 'empty'} );
+            $scope.$emit('hideOffline');
+          });
+        });
+      }      
       // Set geoposition for address lookup
 
       $scope.geoposition = GeoPosition;
@@ -123,8 +155,9 @@
     'MapMarkerClusterGroup',
     'TrailSearch',
     'VectorLayer',
+    'OfflineMapTileLayer',
 
-    function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, VectorLayer) {
+    function ($scope, Map, Models, GeoPosition, GeoPositionMarker, MapTileLayer, MapTrailLayer, MapTrailHeadMarker, MapMarkerClusterGroup, TrailSearch, VectorLayer, OfflineMapTileLayer) {
 
       //
       // "CONSTANTS"
@@ -133,6 +166,7 @@
       // Name of the views.
       var MAP_VIEW = 'map';
       var TRAILS_VIEW = 'trails';
+      var NOTIFICATION_VIEW = 'notifications-notices';
 
       // Default search message when no filters are selected.
       var DEFAULT_SEARCH_MESSAGE = "All Activities";
@@ -272,14 +306,16 @@
       // MAP TILES LOGIC
       //
 
-      var terrainTileLayer = new MapTileLayer({key: 'terrain'}).addTo(Map);
-      var satelliteTileLayer = new MapTileLayer({key: 'satellite'});
+      var baseLayers = [];
+      
+      baseLayers.push(new MapTileLayer({key: 'terrain'}).addTo(Map));
+      baseLayers.push(new MapTileLayer({key: 'satellite'}));
 
-      var currentLayer = terrainTileLayer;
+      var currentLayerIndex = 0;      
       function toggleMapTileLayer () {
-        Map.removeLayer(currentLayer);
-        currentLayer = (currentLayer === terrainTileLayer ? satelliteTileLayer : terrainTileLayer);
-        Map.addLayer(currentLayer);
+        Map.removeLayer(baseLayers[currentLayerIndex]);
+        currentLayerIndex = ++currentLayerIndex >= baseLayers.length ? 0 : currentLayerIndex;
+        Map.addLayer(baseLayers[currentLayerIndex]);
         toggleView(TRAILS_VIEW);
       }
 
@@ -377,6 +413,7 @@
 
           var vectorLayer = new VectorLayer();
           vectorLayer.setOrganizations(Models.StewardDetail.query.collection);
+          vectorLayer.setGeoJsonProvider(Models.loadModel);
           vectorLayer.setMap(Map);
 
 
@@ -663,6 +700,33 @@
       }
 
       $scope.distance = distance;
+
+      $scope.$on('showOffline', function (e, tileJson, bounds) { 
+        Map.removeLayer(baseLayers[currentLayerIndex]);
+
+        for (var i = 0; i < baseLayers.length; i++) {
+          if ( baseLayers[i] instanceof OfflineMapTileLayer ) {
+              baseLayers.splice(i, 1);            
+          }
+        };
+        var layer = new OfflineMapTileLayer({tileJson: tileJson}); 
+        Map.addLayer(layer);
+        baseLayers.push(layer);
+        Map.fitBounds(bounds);
+        $scope.$apply(function(){$scope.view = MAP_VIEW});
+      });
+
+      $scope.$on('hideOffline', function () { 
+        for (var i = 0; i < baseLayers.length; i++) {
+          if ( baseLayers[i] instanceof OfflineMapTileLayer ) {
+            if ( Map.hasLayer(baseLayers[i]) ) {
+              Map.removeLayer(baseLayers[i]);
+              Map.addLayer(baseLayers[0]);
+              baseLayers.splice(i, 1);
+             }
+          }
+        };
+      });
 
       // On Load
 
